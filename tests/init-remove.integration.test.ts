@@ -89,9 +89,9 @@ describe('init — claude-code', () => {
     const dir = await freshDir();
     await runInit({ dir, tools: 'claude-code', yes: true });
 
-    const slugs = ['create-story', 'complete-story', 'implement-story', 'define-principles', 'bootstrap-from-research'];
+    const slugs = ['create-stories', 'complete-story', 'implement-story', 'verify-story', 'define-principles', 'bootstrap-from-research'];
     for (const slug of slugs) {
-      expect(await fileExists(join(dir, '.claude', 'skills', slug, 'SKILL.md'))).toBe(true);
+      expect(await fileExists(join(dir, '.claude', 'skills', `alphaspec.${slug}`, 'SKILL.md'))).toBe(true);
     }
   });
 
@@ -117,12 +117,12 @@ describe('init — claude-code', () => {
 });
 
 describe('init — github-copilot', () => {
-  it('creates both skills and prompt files', async () => {
+  it('creates skills (prompt files no longer written)', async () => {
     const dir = await freshDir();
     await runInit({ dir, tools: 'github-copilot', yes: true });
 
-    expect(await fileExists(join(dir, '.github', 'skills', 'create-story', 'SKILL.md'))).toBe(true);
-    expect(await fileExists(join(dir, '.github', 'prompts', 'create-story.prompt.md'))).toBe(true);
+    expect(await fileExists(join(dir, '.github', 'skills', 'alphaspec.create-stories', 'SKILL.md'))).toBe(true);
+    expect(await fileExists(join(dir, '.github', 'prompts', 'create-stories.prompt.md'))).toBe(false);
     expect(await fileExists(join(dir, '.github', 'copilot-instructions.md'))).toBe(true);
   });
 
@@ -139,11 +139,11 @@ describe('remove — claude-code', () => {
     await runInit({ dir, tools: 'claude-code', yes: true });
 
     // Confirm files exist before removal
-    expect(await fileExists(join(dir, '.claude', 'skills', 'create-story', 'SKILL.md'))).toBe(true);
+    expect(await fileExists(join(dir, '.claude', 'skills', 'alphaspec.create-stories', 'SKILL.md'))).toBe(true);
 
     await runRemove({ dir, yes: true, purge: true });
 
-    expect(await fileExists(join(dir, '.claude', 'skills', 'create-story'))).toBe(false);
+    expect(await fileExists(join(dir, '.claude', 'skills', 'alphaspec.create-stories'))).toBe(false);
     expect(await fileExists(join(dir, '.alphaspec'))).toBe(false);
     // --purge + --yes deletes pending/ and done/ too
     expect(await fileExists(join(dir, 'pending'))).toBe(false);

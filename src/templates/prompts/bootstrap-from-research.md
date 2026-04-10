@@ -5,6 +5,21 @@ description: Generate epics and stories from a research document (market analysi
 
 The user wants to bootstrap an alphaspec project from a research document. Input: ${input:source}
 
+## Context: alphaspec workflow
+
+You are operating within alphaspec, a Story-Driven Development (SDD) workflow. This prompt is the **idea-to-plan bridge** — it turns a research document into the foundational decisions and story backlog that the rest of the workflow executes against.
+
+Downstream prompts depend on what you produce here:
+- **define-principles** derives the project's system constitution from the foundations you lock
+- **create-stories** refines and extends the stories you generate
+- **implement-story** builds what the stories describe
+- **verify-story** reviews the implementation against principles and acceptance criteria
+- **complete-story** refines stories to match reality and archives them to `done/`
+
+Every story you generate must be a **verifiable increment** — scoped so that implement-story can build it and complete-story can verify it. If a story is too vague to verify, it's too vague to ship.
+
+If the project already has `.alphaspec/PRINCIPLES.md`, read it before generating stories. The principles define the project's architectural, quality, and non-functional requirements — your stories should align with them. If PRINCIPLES.md doesn't exist yet, that's normal for a bootstrap — suggest the user run `/alphaspec.define-principles` after the bootstrap to establish the system constitution.
+
 The input may be a file path, a URL, or pasted markdown content. Handle all three.
 
 ## A note on long sessions and memory checkpoints
@@ -180,15 +195,16 @@ Do NOT generate any stories yet. Wait for the user to approve, edit, or replace 
 
 Once the epic structure is approved, walk through the epics one at a time. For each epic, generate its stories before moving to the next. After each epic is done, save a checkpoint to memory and briefly tell the user "Done with epic N: <n> stories. Moving to epic N+1." This protects the work against context compaction and lets the user interrupt if they see something off.
 
-For each epic, generate 2-6 small stories. Each story:
+For each epic, generate 2-6 small stories. Follow the create-stories template structure: **Description → Acceptance Criteria → Key Decisions → Related → Notes**. Apply the same quality checks: WHAT not HOW, observable ACs, verifiable increments, principles-derived ACs where PRINCIPLES.md exists.
 
-- Is brief (under 100 lines, often under 50 at this stage)
-- Captures WHAT and WHY, not HOW
-- Inherits the foundational decisions locked in Step 2 — do not re-decide them, do not propose alternatives
-- Includes Key Decisions only for things that apply specifically to this story or epic, beyond the foundations (often empty at this stage — that's fine)
-- Links back to the research document in a Sources subsection — always include this — the research IS the grounding
-- Notes any cross-epic dependencies in the Notes section
-- **For epics that own a deferred decision**: the first story in the epic that touches the deferred concern includes the research/choose work as part of its acceptance criteria. The story's Notes section explicitly says "this story makes the deferred decision about <X>. Use the project's actual context (volume, requirements, existing code) to evaluate options. Surface the decision to the user before locking it in."
+Additional rules for bootstrap-generated stories:
+
+- Brief — under 100 lines, often under 50 at this stage
+- Inherit the foundational decisions locked in Step 2 — do not re-decide them, do not propose alternatives
+- Include Key Decisions only for things specific to this story or epic, beyond the foundations (often empty — that's fine)
+- Link back to the research document in a Sources subsection in Notes — always include this — the research IS the grounding
+- Note cross-epic dependencies in the Related section (`Depends on:` / `Related to:`)
+- **For epics that own a deferred decision**: the first story that touches the deferred concern includes the research/choose work as part of its acceptance criteria. The Notes section explicitly says "this story makes the deferred decision about <X>. Use the project's actual context to evaluate options. Surface the decision to the user before locking it in."
 
 **Story sequencing within an epic — incremental and ordered**
 
@@ -213,7 +229,19 @@ Cross-epic dependencies: <any noted>
 
 Then announce to the user: "Done with epic N (M stories). Moving to epic N+1." and continue.
 
-## Step 5 — Show the full compiled outline before writing
+## Step 5 — Self-check before presenting
+
+Before showing the outline, review the stories you've generated against these criteria:
+
+- **Verifiable increment?** Could implement-story build this story and verify-story check it against principles? If a story's acceptance criteria are too vague to test, sharpen them.
+- **WHAT not HOW?** Stories describe what needs to exist, not implementation steps. If you wrote "create a file called X" instead of "the system can do Y", rewrite.
+- **Incremental sequence?** Within each epic, does each story build on the previous? Could the user ship story-01 alone and have something working?
+- **Deferred decisions placed correctly?** Each Bucket 2 decision lands in the first story that genuinely needs it — not earlier.
+- **Principles alignment?** If PRINCIPLES.md exists, do the stories respect the architectural patterns, quality requirements, and NFR targets defined there?
+
+Fix any issues before proceeding.
+
+## Step 6 — Show the full compiled outline before writing
 
 Once all epics are generated, present the full outline to the user as a single view:
 
@@ -234,22 +262,17 @@ Once all epics are generated, present the full outline to the user as a single v
 
 Wait for confirmation. The user may ask you to drop, add, rename, or reorder stories. Apply the changes and re-show until approved.
 
-## Step 6 — Write all files
+## Step 7 — Write all files
 
 Once the outline is approved, write all the files at once:
 
-- One `_epic.md` per epic with the structure used by `create-story`
-- One story file per story
+- One `_epic.md` per epic with the structure used by create-stories
+- One story file per story, following the create-stories template (Description → AC → Key Decisions → Related → Notes)
 - Update each `_epic.md`'s Stories table to list its stories in order
 
 Use sequential numbering: epics from 01 upward in the order proposed, stories within each epic from 01 upward in the incremental sequence determined in Step 4.
 
-Make sure:
-- Each story file has a Sources subsection in Notes that links back to the research document
-- Foundational Key Decisions from Step 2 are referenced in the relevant epic's Key Decisions section
-- Stories that own a deferred decision explicitly include the research/choose work in their Description and Acceptance Criteria, and note in their Notes section that this story makes the deferred decision and how to approach it
-
-## Step 7 — Hand off to the user
+## Step 8 — Hand off to the user
 
 Give the user a summary:
 
@@ -261,7 +284,7 @@ Give the user a summary:
 >
 > Cherry-pick freely — refine what's good, delete what doesn't fit, leave the rest for later. Each story is small enough that you can reshape any part without affecting the rest.
 >
-> Suggested next step: review epic 01 first since everything else depends on it. When you're ready to start work, run `/implement-story` on the first story.
+> Suggested next step: If you haven't defined your project's principles yet, run `/alphaspec.define-principles` to establish the system constitution. Then review epic 01 first since everything else depends on it. When you're ready to start work, run `/alphaspec.implement-story` on the first story.
 
 ## Critical rules
 
@@ -271,6 +294,8 @@ Give the user a summary:
 - **Use memory checkpoints aggressively.** Foundations after Step 2, then per epic in Step 4. Losing the foundational decisions or partial epic work to context compaction is the failure mode this prompt exists to prevent.
 - **Stories within an epic follow an incremental sequence**, not a flat list. Each story builds on the previous and delivers something validable.
 - **Vertical slices, not horizontal layers.** Each epic is a user-facing capability, not infrastructure-by-infrastructure.
+- **Do not implement stories. Do not define principles** — that's define-principles' job. Your scope is research analysis, decision locking, and backlog structuring.
+- **You are done when** all epics are structured with sequenced stories, foundational decisions are locked, deferrals are recorded with their target epics, and the user has a clear starting point.
 - Foundations first, features second, cross-cutting last.
 - Small stories. Resist the urge to make each story comprehensive.
 - Every story links back to the research document as a Source.

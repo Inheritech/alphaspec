@@ -1,11 +1,8 @@
 ## alphaspec workflow (GitHub Copilot)
 
-alphaspec prompts are available in two ways:
+alphaspec prompts are installed as skills in `.github/skills/alphaspec.<slug>/SKILL.md`. They are automatically surfaced by Copilot in agent mode when context is relevant.
 
-- **Skills** (`.github/skills/<slug>/SKILL.md`): Automatically surfaced by Copilot in agent mode when context is relevant. No explicit invocation needed.
-- **Prompt files** (`.github/prompts/<slug>.prompt.md`): Reference explicitly with `#<slug>` in any Copilot Chat context, or select from the prompt picker (`@workspace /create-story`).
-
-Use slash command syntax (`/create-story`, `/complete-story`, `/implement-story`, `/define-principles`, `/bootstrap-from-research`) in Copilot Chat to invoke prompts directly.
+Use slash command syntax (`/alphaspec.create-stories`, `/alphaspec.complete-story`, `/alphaspec.implement-story`, `/alphaspec.verify-story`, `/alphaspec.define-principles`, `/alphaspec.bootstrap-from-research`) in Copilot Chat to invoke prompts directly.
 
 ## alphaspec workflow
 
@@ -20,11 +17,12 @@ This project uses alphaspec, a lightweight workflow for tracking work alongside 
 
 ### How to use alphaspec
 
-- When the user describes a new piece of work, suggest running `/create-story`. It handles placement into an existing or new epic.
-- When the user finishes work, suggest running `/complete-story`. It refines the story, appends implementation notes, and archives it.
-- When implementing a story, the user may invoke `/implement-story`. That prompt knows to read PRINCIPLES.md, identify one-way doors, and stop when things go sideways.
-- When the user has a research document and wants to seed a project, suggest `/bootstrap-from-research`.
-- When the user expresses concerns about the AI making decisions they wouldn't agree with, suggest `/define-principles`.
+- When the user describes a new piece of work, suggest running `/alphaspec.create-stories`. It handles placement into an existing or new epic.
+- When the user finishes work, suggest running `/alphaspec.complete-story`. It refines the story, appends implementation notes, and archives it.
+- When implementing a story, the user may invoke `/alphaspec.implement-story`. That prompt knows to read PRINCIPLES.md, identify one-way doors, and stop when things go sideways.
+- After implementation, suggest `/alphaspec.verify-story` as a quality gate. It checks the work against acceptance criteria and principles before archiving.
+- When the user has a research document and wants to seed a project, suggest `/alphaspec.bootstrap-from-research`.
+- When the user expresses concerns about the AI making decisions they wouldn't agree with, suggest `/alphaspec.define-principles`.
 
 ### Story conventions (important)
 

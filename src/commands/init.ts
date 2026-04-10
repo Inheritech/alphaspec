@@ -173,7 +173,7 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
 
   clack.outro(
     isExtendMode
-      ? `Extended. Try a prompt like /create-story in your AI assistant.`
-      : `Ready. Try /create-story to add your first story, or /bootstrap-from-research if you have a research doc.`,
+      ? `Extended. Try a prompt like /alphaspec.create-stories in your AI assistant.`
+      : `Ready. Try /alphaspec.create-stories to add your first story, or /alphaspec.bootstrap-from-research if you have a research doc.`,
   );
 }

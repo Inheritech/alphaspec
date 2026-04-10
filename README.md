@@ -7,15 +7,17 @@
   <a href="https://github.com/inheritech/alphaspec/actions/workflows/ci.yml"><img src="https://github.com/inheritech/alphaspec/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
-<p align="center">Story-driven development for AI-assisted projects, without the process overhead.</p>
+<p align="center">Track what needs to be built — plain markdown your AI tools read as context.</p>
 
 ## What is alphaspec
 
-`alphaspec` brings story-driven development into your repo without adding process overhead. It's aimed primarily at solo developers and small teams who want a lightweight way to organise ideas before and during implementation.
+`alphaspec` is a lightweight story-driven development workflow for AI-assisted projects. It creates a simple folder structure in your repo (`pending/` and `done/`) and installs prompts as skills into whichever AI coding tools you already use.
 
-Work is grouped into **epics** (collections of related ideas) and **stories** (individual pieces of work). The terms come from SDD, but without the bureaucratic overhead — no estimation, no standups, no product owner, no ticket hierarchy. You use them because the structure is useful, not because a process demands it.
+Work is organised into **epics** (a group of related work) and **stories** (an individual piece of work). Stories capture *what* needs to be built and *why* — not how. There's no formal specification — just plain markdown that describes requirements in a way both you and your AI can read.
 
-Everything is plain markdown in your repo. Your AI coding tools read it as context. `alphaspec` sets up the folders, installs prompts into whichever tools you already use, and stays out of the way.
+alphaspec deliberately stays out of planning. How you break down implementation, what order you tackle things, which tools you use for thinking through architecture — that's your call. Most AI tools already have their own planning capabilities, and you might use external tools on top of that. alphaspec doesn't compete with any of them. It just tracks the stories so your AI has a shared view of what's been asked for, what's in progress, and what's done.
+
+No estimation, no standups, no ticket hierarchy — just folders and markdown files.
 
 ## Install
 
@@ -43,101 +45,126 @@ $ alphaspec init
 ✔  Done — pending/ and done/ are ready
 ```
 
-Configure non-interactively with `--tools`:
+Non-interactive:
 
 ```bash
 alphaspec init --tools claude-code,github-copilot
 alphaspec init --tools all --yes   # all tools, skip prompts
-alphaspec init --tools none        # folder structure only, no tool configuration
+alphaspec init --tools none        # folder structure only
 ```
 
-## How it works
+## Usage
 
-Work lives in `pending/` and `done/` at the root of your project — plain markdown that your AI tools can read as context.
+The core workflow has four steps. Each one is a slash command you run inside your AI tool.
+
+### 1. Create stories
+
+Describe what you want to build. The prompt creates stories grouped under an epic, with acceptance criteria and context — capturing the *what* and *why*, not the *how*.
+
+```
+/alphaspec.create-stories
+```
+
+### 2. Implement a story
+
+Pick a story and start building. The prompt loads the story context, checks for principles and dependencies, and flags decisions that are hard to reverse before you commit to them. It adds guardrails for common pitfalls — missing dependencies, silent architectural decisions, drift from acceptance criteria.
+
+It works equally well with planning agents and execution agents. Invoke it during a planning phase to structure your approach before any code is written — the planning comes from your tooling, the prompt just makes sure the story is loaded as context.
+
+> **Note:** This step is optional. Stories are just markdown — you can work from them directly if you prefer.
+
+```
+/alphaspec.implement-story
+```
+
+### 3. Verify your work
+
+Review what was built against the story's acceptance criteria. The prompt acts as a critical reviewer — checking each criterion, flagging drift from the original intent, and producing a structured pass/fail report.
+
+```
+/alphaspec.verify-story
+```
+
+### 4. Complete and archive
+
+Once verified, archive the story. The prompt refines the story to match what was actually built, appends implementation notes, and moves it from `pending/` to `done/`.
+
+```
+/alphaspec.complete-story
+```
+
+## Bootstrap from research
+
+If you're starting a project from research output — notes from Perplexity, ChatGPT, a design spike, or any other source — this prompt converts that into a structured set of epics and stories. You review what it produces, keep what fits, discard what doesn't.
+
+```
+/alphaspec.bootstrap-from-research
+```
+
+Useful for spinning up a project quickly without translating research into tasks by hand.
+
+## Principles
+
+Principles are engineering guidelines that live in `.alphaspec/PRINCIPLES.md` — things like "no ORM, raw SQL only" or "every API endpoint must be idempotent." They act as the project's constitution.
+
+Once defined, principles integrate into the rest of the workflow automatically: `implement-story` reads them before writing code, `verify-story` checks compliance against them.
+
+To define or update principles:
+
+```
+/alphaspec.define-principles
+```
+
+## Concepts
+
+### Folder structure
 
 ```
 pending/
   01-auth/
-    _epic.md
+    _epic.md                     ← epic overview
     story-02-password-reset.md   ← what to build and why
 
 done/
   01-auth/
-    story-01-login-flow.md       ← completed, with implementation notes appended
+    story-01-login-flow.md       ← completed, with implementation notes
 ```
 
-The workflow:
+Work lives in `pending/`. Completed work moves to `done/`. Both are plain markdown your AI tools read as context.
 
-1. **Create a story** — capture what you want to build and why, grouped under an epic
-2. **Implement** — use the `implement-story` prompt to guide the AI through the work
-3. **Complete** — run `complete-story` to append implementation notes and move it to `done/`
+### Epics and stories
 
-`done/` builds up over time into a record of decisions and approaches — long-term memory the AI references on future work.
+An **epic** is a folder grouping related work (`01-auth/`). A **story** is a single piece of work inside an epic. Stories capture what the user needs and why — not how to build it. Implementation details change; requirements endure.
 
-If you use other AI tools for research (Perplexity, ChatGPT, dedicated research agents), the `bootstrap-from-research` prompt lets you bring that output in and convert it into a set of epics and stories. You pick what to keep, discard what doesn't fit, and have a working starting point without having to translate research into tasks by hand. Useful for spinning up a PoC quickly from a research spike.
+Stories are living documents. Description, acceptance criteria, and key decisions get refined as understanding sharpens during planning and implementation.
 
-alphaspec works with any combination of tools. Run `alphaspec init --tools none` to skip tool configuration entirely and just get the folder structure.
+### done/ as long-term memory
 
-## AI tool setup
+`done/` is not an archive you forget about. Completed stories include implementation notes — a brief record of what was built and how. AI tools read `done/` to orient on future work, avoiding repeated mistakes and maintaining consistency across the codebase.
 
-alphaspec installs the same five prompts into each configured tool. From there, you invoke them natively inside whatever tools you already have open.
+## Using with your AI tool
+
+alphaspec installs prompts as **skills** — a format supported across AI coding tools. Skills are loaded automatically when relevant context is detected, and can also be invoked directly as slash commands. This means the AI can pull in the right prompt on its own, or you can trigger it explicitly.
 
 ### Claude Code
 
-**Files written:** `.claude/skills/<prompt>/SKILL.md` per prompt · `CLAUDE.md` updated
-
-Prompts are available as slash commands:
-
-```
-/create-story
-/implement-story
-/complete-story
-/define-principles
-/bootstrap-from-research
-```
-
-### Cursor
-
-**Files written:** `.cursor/commands/<prompt>.md` per prompt · `.cursor/rules/alphaspec.mdc`
-
-Reference prompts in Composer with `@` or open the Command Palette and search by name. The rules file loads workflow context into every Cursor session automatically.
-
-### Windsurf
-
-**Files written:** `.windsurf/workflows/<prompt>.md` per prompt · `.windsurf/rules/alphaspec.md`
-
-Open the Cascade panel and select a workflow from the workflow picker. The rules file is picked up automatically by Cascade.
+Slash commands in chat: `/alphaspec.create-stories`, `/alphaspec.implement-story`, etc. Skills are also loaded autonomously when Claude detects relevant context.
 
 ### GitHub Copilot
 
-**Files written:** `.github/skills/<prompt>/SKILL.md` per prompt · `.github/prompts/<prompt>.prompt.md` per prompt · `.github/copilot-instructions.md` updated
+Slash commands in chat: `/alphaspec.create-stories`, `/alphaspec.implement-story`, etc. In agent mode, skills are loaded automatically by relevance.
 
-Reference a prompt in Copilot Chat with `#`:
+### Cursor
 
-```
-#create-story
-#implement-story
-```
+Reference prompts with `@` in Composer, or search by name in the Command Palette. Workflow context is loaded into every session automatically via the rules file.
 
-Skills in `.github/skills/` are loaded automatically in Copilot agent mode.
+### Windsurf
+
+Open the Cascade panel and select a workflow from the picker. The rules file is loaded automatically by Cascade.
 
 ### Cline
 
-**Files written:** `.clinerules/prompts/<prompt>.md` per prompt · `.clinerules/alphaspec.md`
-
-Reference a prompt by name in Cline chat. The rules file is picked up automatically from `.clinerules/`.
-
-## Prompts
-
-| Prompt | What it does |
-|--------|-------------|
-| `create-story` | Creates a new story in a new or existing epic |
-| `complete-story` | Refines a story and archives it to `done/` |
-| `implement-story` | Guides implementation of a specific story |
-| `define-principles` | Captures engineering principles into `.alphaspec/PRINCIPLES.md` |
-| `bootstrap-from-research` | Seeds the project workflow from a research document |
-
-Prompt source files are stored in `.alphaspec/prompts/`. Edit them there to customise the workflow for your project.
+Reference a prompt by name in chat (e.g. "Use the alphaspec.create-stories prompt to..."). The rules file is loaded automatically from `.clinerules/`.
 
 ## CLI reference
 
@@ -147,16 +174,14 @@ Prompt source files are stored in `.alphaspec/prompts/`. Edit them there to cust
 alphaspec init [options]
 ```
 
-Interactive. Detects which AI tools are present and pre-selects them. Running `init` again on an existing project only adds new tools — use `--force` to overwrite.
+Detects which AI tools are present and configures them interactively. Running `init` again only adds new tools — use `--force` to overwrite.
 
 | Flag | Description |
 |------|-------------|
-| `-t, --tools <list>` | Comma-separated tool IDs, `all`, or `none`. Skips the prompt. |
-| `-f, --force` | Overwrite existing configuration. |
-| `-y, --yes` | Skip interactive prompts (auto-selects detected tools). |
-| `-d, --dir <path>` | Target directory (defaults to `cwd`). |
-
-**Tool IDs:** `claude-code`, `cursor`, `windsurf`, `github-copilot`, `cline`
+| `-t, --tools <list>` | Comma-separated tool IDs (`claude-code`, `cursor`, `windsurf`, `github-copilot`, `cline`), `all`, or `none` |
+| `-f, --force` | Overwrite existing configuration |
+| `-y, --yes` | Skip interactive prompts (auto-selects detected tools) |
+| `-d, --dir <path>` | Target directory (defaults to cwd) |
 
 ### `alphaspec remove`
 
@@ -164,34 +189,39 @@ Interactive. Detects which AI tools are present and pre-selects them. Running `i
 alphaspec remove [options]
 ```
 
-Removes alphaspec content from IDE config files using sentinel markers — only what alphaspec added is removed. Your own content in `CLAUDE.md`, `copilot-instructions.md`, etc. is preserved.
+Removes only what alphaspec added. Your own content in `CLAUDE.md`, `copilot-instructions.md`, etc. is preserved.
 
 | Flag | Description |
 |------|-------------|
-| `-y, --yes` | Skip all confirmations. |
-| `--purge` | Also delete `pending/` and `done/`. Asks for confirmation unless `--yes` is passed. |
-| `-d, --dir <path>` | Target directory (defaults to `cwd`). |
+| `-y, --yes` | Skip all confirmations |
+| `--purge` | Also delete `pending/` and `done/` (asks for confirmation unless `--yes`) |
+| `-d, --dir <path>` | Target directory (defaults to cwd) |
 
-## Story conventions
+## Customising prompts
 
-- Stories capture **what** and **why** — not how.
-- No estimation, no points, no sprints.
-- Stories are living documents — refine them as understanding sharpens.
-- Completed stories have **Implementation Notes** appended at the bottom.
-- `done/` is long-term memory; AI assistants read it to orient on future work.
+Prompt source files are copied to `.alphaspec/prompts/` during init. Edit them there to adapt the workflow to your project. Changes take effect the next time a prompt is invoked.
 
-## Development
+## What alphaspec isn't
+
+- **Not a project management tool.** No time tracking, no sprints, no velocity charts.
+- **Not for large cross-functional teams.** It's built for solo developers and small teams who want lightweight structure, not enterprise ceremony.
+- **Not a specification language.** Stories are intentionally brief and human-readable, not formal specs.
+- **Not opinionated about your stack.** It doesn't care what language, framework, or CI system you use.
+- **Not opinionated about version control.** It doesn't modify your `.gitignore` — you decide whether to commit `pending/` and `done/`.
+
+## Contributing
 
 ```bash
+git clone https://github.com/inheritech/alphaspec.git
+cd alphaspec
 pnpm install
-pnpm build     # compile to dist/
-pnpm test      # run all tests
-pnpm dev       # watch mode
+pnpm test       # run all tests
+pnpm build      # compile to dist/
+pnpm dev        # watch mode
 ```
 
-Smoke test after building:
+Found a bug or have an idea? [Open an issue](https://github.com/inheritech/alphaspec/issues).
 
-```bash
-node dist/cli.js --version
-node dist/cli.js init --tools none --yes --dir /tmp/test-alphaspec
-```
+## License
+
+[Apache 2.0](LICENSE)

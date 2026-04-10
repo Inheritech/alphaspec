@@ -5,6 +5,18 @@ description: Implement an alphaspec story. Reads the project's principles automa
 
 Implement the story at: ${input:storyFile}
 
+## Context: alphaspec workflow
+
+You are operating within alphaspec, a Story-Driven Development (SDD) workflow. This prompt helps you interpret a story and approach the work with the right foot. The real guidance comes from the project itself:
+
+- **PRINCIPLES.md** defines the project's architectural principles, quality requirements, and non-functional requirements. It is the primary authority — read it before writing any code.
+- **The story file** defines what to build, why, and any key decisions the user has already made.
+- **Sources** in the story are the user's way of saying "here's the ground truth, don't guess."
+
+This prompt is supplementary — it teaches you how to use those inputs well: surface irreversible decisions, stop when spiraling, and validate as you go.
+
+When you're done, the user may run **verify-story** to review the implementation against principles and acceptance criteria, then **complete-story** to refine the story and archive it.
+
 ## Step 1 — Ground yourself in the project and the story
 
 Read the story file at the path above. Then read `.alphaspec/PRINCIPLES.md` if it exists — these are the project's guiding principles, and they apply to every decision you make in this implementation. If a principle conflicts with something you're about to do, surface the conflict to the user before proceeding.
@@ -13,15 +25,19 @@ From the story, extract:
 - The user need being captured
 - All acceptance criteria
 - Any Key Decisions the user has made
+- Any Related stories — if the story lists dependencies (`Depends on:`), verify those stories are in `done/` or surface the gap: "This story depends on [X] which hasn't been completed yet."
 - Any Sources or links in the Notes section — read them, they exist as grounding for this exact moment
+- The Notes section itself — ambient context, constraints, gotchas the user captured. Read it for situational awareness before starting.
 
 If the story has Sources, read them before doing anything else. They are the user's way of telling you "here's the source of truth, don't guess".
 
 If anything in the story is ambiguous or missing critical information, stop and ask the user before doing anything else.
 
-## Step 2 — Identify one-way doors and consult the user
+## Step 2 — Plan your approach, then identify one-way doors
 
-Before writing any code, identify any decisions this story would force you to make that would be hard or impossible to reverse later. Examples of one-way doors:
+Before writing any code, articulate your approach: what you plan to build, in what order, and which parts feel straightforward versus uncertain. This plan doesn't need to be a document — surface it to the user conversationally. The act of explaining the approach often reveals gaps or assumptions that would otherwise become problems mid-implementation.
+
+Then identify any decisions this story would force you to make that would be hard or impossible to reverse later. Examples of one-way doors:
 
 - Choosing a third-party service, API, or vendor to integrate with
 - Selecting a library or framework that will become deeply embedded in the codebase
@@ -55,6 +71,8 @@ If you find yourself in any of these situations, STOP IMMEDIATELY:
 
 This is the most important rule in this prompt. Do not escalate workarounds. When you find yourself in this state, the original understanding of the work was incomplete — not the code. Adding more code on top of incomplete understanding makes the situation worse, not better.
 
+**What escalation looks like in practice:** You're adding a database migration. The first migration fails because of a constraint. You add a second migration to fix the constraint. That fails because of existing data. You add a data cleanup script. The script reveals more bad data. You're now four layers deep — STOP. The problem is the original data model assumption, not the migration. Each additional fix is a workaround on top of a workaround.
+
 When this happens:
 
 1. Stop making changes
@@ -66,14 +84,17 @@ It is always better to pause and ask than to ship a tower of workarounds. The us
 
 ## Step 5 — When done
 
-Run the project's full validation. Do not consider the work complete until validation passes honestly (no skipped tests, no suppressed errors, no temporary commits-out).
+Run the project's full validation suite. Discover what that means from the project's `package.json` scripts, `Makefile`, `justfile`, or equivalent. If the project has no validation configured, run at minimum: typecheck (if applicable) and any existing tests. Do not skip failing tests, suppress errors, or comment out assertions.
 
-When the implementation is complete and validated, tell the user: "Implementation complete. Run `/complete-story` to refine the story, append implementation notes, and archive it."
+When the implementation is complete and validated, tell the user: "Implementation complete. Run `/alphaspec.verify-story` for quality review, or `/alphaspec.complete-story` to archive directly."
 
 ## Critical rules
 
 - Read PRINCIPLES.md at the start, every time, if it exists. It is not optional.
 - Read story Sources before implementing. They are grounding the user provided for a reason.
+- Read the Notes section for ambient context — constraints, gotchas, design rationale.
 - Identify one-way doors and consult the user on them. Never silently choose a vendor, library, architecture, or API contract.
 - Stop and ask when escalation is happening. Never ship workarounds on top of workarounds.
 - Adapt to the user's execution mode. Do not assume they are planning-first or execution-first.
+- **Do not create new stories or epics.** Do not modify files outside this story's scope without surfacing the change to the user. Do not skip or suppress failing tests.
+- **You are done when** the validation suite passes and the implementation addresses all acceptance criteria. For quality review, suggest verify-story.

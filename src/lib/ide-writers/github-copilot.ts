@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { unlink } from 'node:fs/promises';
 import { ensureDir, safeWrite, readIfExists, pathExists, readTemplate } from '../fs-utils';
 import { replaceOrAppendSentinelBlock, removeSentinelBlock } from '../sentinels';
-import { PROMPT_NAMES } from '../templates';
+import { PROMPT_NAMES, PROMPT_SLUG_PREFIX } from '../templates';
 
 // Skills — auto-loaded in agent mode by relevance
 const SKILLS_BASE = '.github/skills';
-// Prompt files — explicitly invocable via #slug or prompt picker
-const PROMPTS_DIR = '.github/prompts';
+// Legacy prompt dir — no longer written, kept for backward-compat cleanup
+const LEGACY_PROMPTS_DIR = '.github/prompts';
 // User-owned instructions file (sentinel)
 const INSTRUCTIONS_FILE = '.github/copilot-instructions.md';
 
@@ -16,17 +16,10 @@ const INSTRUCTIONS_FILE = '.github/copilot-instructions.md';
 export async function apply(dir: string): Promise<void> {
   // Write skills (SKILL.md per slug)
   for (const slug of PROMPT_NAMES) {
-    const skillDir = join(dir, SKILLS_BASE, slug);
+    const skillDir = join(dir, SKILLS_BASE, `${PROMPT_SLUG_PREFIX}${slug}`);
     await ensureDir(skillDir);
     const content = await readTemplate(`prompts/${slug}.md`);
     await safeWrite(join(skillDir, 'SKILL.md'), content);
-  }
-
-  // Also write prompt files for explicit invocation
-  await ensureDir(join(dir, PROMPTS_DIR));
-  for (const slug of PROMPT_NAMES) {
-    const content = await readTemplate(`prompts/${slug}.md`);
-    await safeWrite(join(dir, PROMPTS_DIR, `${slug}.prompt.md`), content);
   }
 
   // Write/update workflow instructions in copilot-instructions.md (user-owned, sentinel)
@@ -39,16 +32,19 @@ export async function apply(dir: string): Promise<void> {
 }
 
 export async function remove(dir: string): Promise<void> {
-  // Remove skill folders
+  const { rm } = await import('node:fs/promises');
+
+  // Remove prefixed skill folders
   for (const slug of PROMPT_NAMES) {
-    const skillDir = join(dir, SKILLS_BASE, slug);
-    const { rm } = await import('node:fs/promises');
+    const skillDir = join(dir, SKILLS_BASE, `${PROMPT_SLUG_PREFIX}${slug}`);
     await rm(skillDir, { recursive: true, force: true });
+    // Also clean up legacy unprefixed dirs
+    await rm(join(dir, SKILLS_BASE, slug), { recursive: true, force: true });
   }
 
-  // Remove prompt files
+  // Clean up legacy prompt files (no longer written)
   for (const slug of PROMPT_NAMES) {
-    const filePath = join(dir, PROMPTS_DIR, `${slug}.prompt.md`);
+    const filePath = join(dir, LEGACY_PROMPTS_DIR, `${slug}.prompt.md`);
     if (await pathExists(filePath)) {
       await unlink(filePath);
     }

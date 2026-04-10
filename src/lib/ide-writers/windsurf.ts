@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { unlink } from 'node:fs/promises';
 import { ensureDir, safeWrite, pathExists, readTemplate } from '../fs-utils';
-import { PROMPT_NAMES } from '../templates';
+import { PROMPT_NAMES, PROMPT_SLUG_PREFIX } from '../templates';
 
 const WORKFLOWS_DIR = '.windsurf/workflows';
 const RULES_DIR = '.windsurf/rules';
@@ -12,7 +12,7 @@ export async function apply(dir: string): Promise<void> {
   await ensureDir(join(dir, WORKFLOWS_DIR));
   for (const slug of PROMPT_NAMES) {
     const content = await readTemplate(`prompts/${slug}.md`);
-    await safeWrite(join(dir, WORKFLOWS_DIR, `${slug}.md`), content);
+    await safeWrite(join(dir, WORKFLOWS_DIR, `${PROMPT_SLUG_PREFIX}${slug}.md`), content);
   }
 
   // Write alphaspec rule to .windsurf/rules/alphaspec.md (alphaspec-owned, direct write)
@@ -24,9 +24,14 @@ export async function apply(dir: string): Promise<void> {
 export async function remove(dir: string): Promise<void> {
   // Remove prompt files
   for (const slug of PROMPT_NAMES) {
-    const filePath = join(dir, WORKFLOWS_DIR, `${slug}.md`);
+    const filePath = join(dir, WORKFLOWS_DIR, `${PROMPT_SLUG_PREFIX}${slug}.md`);
     if (await pathExists(filePath)) {
       await unlink(filePath);
+    }
+    // Also clean up legacy unprefixed files
+    const legacyPath = join(dir, WORKFLOWS_DIR, `${slug}.md`);
+    if (await pathExists(legacyPath)) {
+      await unlink(legacyPath);
     }
   }
 

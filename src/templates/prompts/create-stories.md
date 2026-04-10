@@ -11,7 +11,8 @@ You are operating within alphaspec, a Story-Driven Development (SDD) workflow. T
 
 Each story you create will flow through the rest of the workflow:
 - **implement-story** will read the story, read PRINCIPLES.md, and build what it describes
-- **complete-story** will verify the implementation against both the story's acceptance criteria AND the project's principles before archiving
+- **verify-story** will review the implementation against the story's acceptance criteria and the project's principles as a quality gate
+- **complete-story** will refine the story to match reality, append what was learned, and archive it to `done/`
 
 This means every story you create must be a **verifiable increment** — scoped so it can be independently implemented, tested against principles, and completed. If a story can't be verified as done on its own, it needs to be scoped differently.
 
@@ -97,7 +98,8 @@ Before writing any story files, verify each story against these checks:
 - **Description captures WHAT and WHY, not HOW.** If the description mentions specific code, specific files, or implementation approach, it's describing HOW. Rewrite it to describe the need and the reason.
 - **Each acceptance criterion is an observable outcome.** "User can reset their password via email" is an outcome. "Add a POST /api/auth/reset-password endpoint" is an implementation step. Rewrite implementation steps as outcomes.
 - **No scope was added that the user didn't ask for.** Compare each AC to the user's original description. If an AC covers something the user never mentioned, cut it.
-- **This story is a verifiable increment.** Can implement-story build it? Can complete-story verify it against principles and mark it done? If not, the scope needs adjustment.
+- **This story is a verifiable increment.** Can implement-story build it? Can verify-story check it against principles? If not, the scope needs adjustment.
+- **Acceptance criteria include principles-derived checks where applicable.** If PRINCIPLES.md exists and a principle directly constrains this story's work, there should be an AC that makes that constraint verifiable. A story introducing a new public module in a project with "every public module has contract tests" needs an AC for contract tests.
 
 ### What good vs bad acceptance criteria look like
 
@@ -111,6 +113,13 @@ Before writing any story files, verify each story against these checks:
 - "Add try/catch to the payment handler" (implementation detail)
 - "Create a pagination utility function" (horizontal layer, not user-visible outcome)
 
+**Bad — implementation details disguised as requirements:**
+- "Payment data is stored in the `payments` table with columns `id`, `amount`, `status`" (schema decision — rots the moment the schema changes)
+- "Use the `calculateTax()` helper from `utils/tax.ts`" (couples the story to today's code structure)
+- "The response includes fields `user_id`, `created_at`, `payment_method`" (naming specific fields is implementation — the requirement is what data the user needs to see)
+
+The test: will this criterion still be true after a refactor? "User can see their payment history" survives a schema change. "Payments table has a `status` column" does not. Write requirements that endure.
+
 ## Step 7 — Write the story (or stories)
 
 Once the destination is confirmed, write each story file at `pending/NN-epic-name/story-MM-name.md` where MM is the next available story number. Use this exact structure:
@@ -120,25 +129,38 @@ Once the destination is confirmed, write each story file at `pending/NN-epic-nam
 
 ## Description
 
-<2-5 sentences describing what the user needs and why. No implementation details. No code snippets. No file paths in this section. Capture the WHAT and the WHY, not the HOW.>
+<What the user needs and why. No implementation details, no code, no file paths.
+
+For stories with multiple concerns (security, data needs, UX, edge cases), use `###` subsections to organize by concern area. Each subsection should be a paragraph or less — if it's longer, the concern might warrant its own acceptance criterion.
+
+Simple stories don't need subsections — a few sentences describing the need is enough.>
 
 ## Acceptance Criteria
 
-- [ ] <criterion 1, observable outcome>
-- [ ] <criterion 2>
-- [ ] <criterion 3>
+<Quality checklist of observable outcomes. Functional criteria first, then principles-derived criteria where PRINCIPLES.md directly constrains this story.>
+
+- [ ] <functional criterion — observable outcome>
+- [ ] <functional criterion>
+- [ ] <principles-derived criterion, if applicable>
 
 ## Key Decisions
 
-<Optional. Only fill in if the user has expressed concrete decisions about how this should be approached. Examples: "use the existing auth flow", "don't add a new dependency", "keep this synchronous". These are NOT implementation details — they are constraints the user has chosen. If the user has not expressed any decisions, leave this section out entirely. Do not invent decisions.>
+<Optional. Only include if the user has expressed concrete decisions about the approach. These are constraints the user has chosen, not implementation details. If no decisions were expressed, omit this section entirely.>
+
+## Related
+
+<Optional. Include only when this story has dependencies on or relationships with other stories. Omit entirely when no relationships exist.>
+
+- Depends on: `story-01-name` — <why>
+- Related to: `story-03-name` — <why>
 
 ## Notes
 
-<Optional. Free-form scratchpad for context, miscellaneous detail, and links the user provided. The user owns this section.>
+<Context that completes the reader's understanding — ambient constraints, gotchas, design rationale, open questions, domain knowledge. If someone reading the story would ask "but what about...", that belongs here. Use whatever subsection headers fit the content.>
 
 ### Sources
 
-<Only if the user provided references. Bullet list of links, file paths, or document names that ground this story. The implementer should consult these before making decisions.>
+<Only if the user provided references. Bullet list of links, file paths, or document names that ground this story.>
 ```
 
 If writing multiple stories, number them sequentially within the epic.
@@ -180,8 +202,10 @@ After writing, suggest the next step: "Stories are ready. Run `/alphaspec.implem
 
 - **Every story is a verifiable increment.** It can be independently implemented, tested against principles, and completed. No horizontal layers disguised as stories.
 - **Follow the user's guidance.** Do not lead, suggest extensions, or add scope the user didn't request. Capture what the user wants, not what you think they should want.
-- **Acceptance criteria are observable outcomes, not implementation steps.** If an AC describes HOW instead of WHAT, rewrite it.
+- **Acceptance criteria are observable outcomes, not implementation steps.** If an AC describes HOW instead of WHAT, rewrite it. Write requirements that endure beyond refactors, not implementation details that rot.
 - **Prefer fewer stories over more.** Splitting overhead is real. One well-scoped story beats three artificially separated ones. Never split without the user's explicit approval.
+- **Do not implement stories. Do not modify PRINCIPLES.md.** Your scope is story creation and refinement only.
+- **You are done when** every story has Description + AC + Notes (and Key Decisions / Related where applicable), the split heuristics are satisfied, and the stories are ready for implement-story.
 - Stories are brief. Aim for under 100 lines, never exceed 200.
 - No implementation details, no code, no file paths in spec sections (file paths in Sources are fine).
 - No story points.
