@@ -16,9 +16,10 @@ program
   .description('Initialise alphaspec in the current project')
   .option('-d, --dir <path>', 'target directory (defaults to cwd)')
   .option('-t, --tools <list>', 'comma-separated tool IDs, "all", or "none"')
+  .option('-s, --stories-dir <path>', 'container directory for pending/ and done/ (default: stories)')
   .option('-f, --force', 'overwrite existing configuration')
   .option('-y, --yes', 'skip interactive prompts (auto-select detected tools)')
-  .action(async (opts: { dir?: string; tools?: string; force?: boolean; yes?: boolean }) => {
+  .action(async (opts: { dir?: string; tools?: string; storiesDir?: string; force?: boolean; yes?: boolean }) => {
     try {
       await runInit(opts);
     } catch (err) {
@@ -33,8 +34,8 @@ program
   .command('remove')
   .description('Remove alphaspec from the current project')
   .option('-d, --dir <path>', 'target directory (defaults to cwd)')
-  .option('-y, --yes', 'skip IDE config removal confirmation (still asks about pending/done)')
-  .option('--purge', 'delete everything including pending/ and done/ without asking')
+  .option('-y, --yes', 'skip all confirmations')
+  .option('--purge', 'also delete stories directory (pending/ and done/)')
   .action(async (opts: { dir?: string; yes?: boolean; purge?: boolean }) => {
     try {
       await runRemove(opts);

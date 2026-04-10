@@ -25,7 +25,7 @@ From the story, extract:
 - The user need being captured
 - All acceptance criteria
 - Any Key Decisions the user has made
-- Any Related stories — if the story lists dependencies (`Depends on:`), verify those stories are in `done/` or surface the gap: "This story depends on [X] which hasn't been completed yet."
+- Any Related stories — if the story lists dependencies (`Depends on:`), verify those stories are in `{{doneDir}}/` or surface the gap: "This story depends on [X] which hasn't been completed yet."
 - Any Sources or links in the Notes section — read them, they exist as grounding for this exact moment
 - The Notes section itself — ambient context, constraints, gotchas the user captured. Read it for situational awareness before starting.
 

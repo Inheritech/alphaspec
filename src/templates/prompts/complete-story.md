@@ -7,12 +7,12 @@ The user has finished some work and wants to mark stories complete.
 
 ## Context: alphaspec workflow
 
-You are operating within alphaspec, a Story-Driven Development (SDD) workflow. This prompt is the **archival step** — it refines stories to match what was actually built, appends what was learned, and moves them to the permanent record in `done/`.
+You are operating within alphaspec, a Story-Driven Development (SDD) workflow. This prompt is the **archival step** — it refines stories to match what was actually built, appends what was learned, and moves them to the permanent record in `{{doneDir}}/`.
 
 Your job:
 1. **Story accuracy** — Refine the story so it reflects what was actually built
 2. **Technical record** — Append Implementation Notes that are dense and useful for future work
-3. **Archival** — Move the completed story to `done/` and surface any work it unblocks
+3. **Archival** — Move the completed story to `{{doneDir}}/` and surface any work it unblocks
 
 Quality verification — checking the implementation against principles and acceptance criteria — is **verify-story's** job. If a story hasn't been verified yet, suggest running it first. If the user chooses to skip, proceed with archival.
 
@@ -24,15 +24,15 @@ Other prompts in the workflow:
 
 ## Step 1 — Identify candidate stories
 
-Look at the conversation history of the current session. Identify which stories from `pending/` were worked on or appear to be complete based on the work that was done.
+Look at the conversation history of the current session. Identify which stories from `{{pendingDir}}/` were worked on or appear to be complete based on the work that was done.
 
 If the user passed an explicit story file path or story name as input, use that and skip the discovery phase: ${input:storyHint}
 
 Otherwise, present the candidates to the user with a brief reason for each:
 
 > I think these stories are complete based on this session:
-> - `pending/03-checkout-flow/story-02-payment-intent.md` — implemented the Stripe webhook handler and tests are passing
-> - `pending/03-checkout-flow/story-03-confirmation-email.md` — added the email service and template
+> - `{{pendingDir}}/03-checkout-flow/story-02-payment-intent.md` — implemented the Stripe webhook handler and tests are passing
+> - `{{pendingDir}}/03-checkout-flow/story-03-confirmation-email.md` — added the email service and template
 >
 > Should I proceed with marking these complete?
 
@@ -95,19 +95,19 @@ After the story body reflects reality, append Implementation Notes:
 
 ### 2d — Move the story to done/
 
-Move `pending/<epic>/<story>.md` to `done/<epic>/<story>.md`. Create the `done/<epic>/` directory if it doesn't exist. If the destination already has a file with the same name, do not overwrite — surface the conflict to the user.
+Move `{{pendingDir}}/<epic>/<story>.md` to `{{doneDir}}/<epic>/<story>.md`. Create the `{{doneDir}}/<epic>/` directory if it doesn't exist. If the destination already has a file with the same name, do not overwrite — surface the conflict to the user.
 
 ### 2e — Check if the epic is now empty
 
-After moving the story, check if `pending/<epic>/` still contains any story files. If only `_epic.md` remains:
+After moving the story, check if `{{pendingDir}}/<epic>/` still contains any story files. If only `_epic.md` remains:
 
-- Move `_epic.md` to `done/<epic>/_epic.md`
-- Remove the empty `pending/<epic>/` directory
-- Tell the user: "Epic <n> is now complete and has been archived to done/."
+- Move `_epic.md` to `{{doneDir}}/<epic>/_epic.md`
+- Remove the empty `{{pendingDir}}/<epic>/` directory
+- Tell the user: "Epic <n> is now complete and has been archived to {{doneDir}}/."
 
 ### 2f — Surface unblocked work
 
-After moving the story, check the Related sections of other stories still in `pending/`. If any story has a `Depends on:` reference to the story just completed, surface it:
+After moving the story, check the Related sections of other stories still in `{{pendingDir}}/`. If any story has a `Depends on:` reference to the story just completed, surface it:
 
 > Completing this story may unblock:
 > - `story-03-payment-confirmation` — depends on this story's payment intent handler
@@ -129,7 +129,7 @@ After all confirmed stories are processed, give the user a summary:
 
 - **Suggest verify-story if the story hasn't been verified.** Quality verification is verify-story's job, not yours. If the user wants to skip verification, respect that and proceed with archival.
 - **Do not implement code. Do not run quality verification.** Your scope is documentation, refinement, and archival.
-- **You are done when** every confirmed story has been refined to match reality, has Implementation Notes, has been moved to `done/`, and any unblocked work is surfaced.
+- **You are done when** every confirmed story has been refined to match reality, has Implementation Notes, has been moved to `{{doneDir}}/`, and any unblocked work is surfaced.
 - Never mark a story complete without user confirmation, even if it looks obvious.
 - The story body must reflect reality before it gets archived.
 - Implementation Notes are a compass, not a map. 2-6 sentences of dense, specific technical fact.

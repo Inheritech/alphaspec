@@ -11,7 +11,7 @@
 
 ## What is alphaspec
 
-`alphaspec` is a lightweight story-driven development workflow for AI-assisted projects. It creates a simple folder structure in your repo (`pending/` and `done/`) and installs prompts as skills into whichever AI coding tools you already use.
+`alphaspec` is a lightweight story-driven development workflow for AI-assisted projects. It creates a simple folder structure in your repo (`stories/pending/` and `stories/done/`) and installs prompts as skills into whichever AI coding tools you already use.
 
 Work is organised into **epics** (a group of related work) and **stories** (an individual piece of work). Stories capture *what* needs to be built and *why* — not how. There's no formal specification — just plain markdown that describes requirements in a way both you and your AI can read.
 
@@ -42,7 +42,7 @@ $ alphaspec init
 ✔  Claude Code configured
 ✔  GitHub Copilot configured
 ✔  AGENTS.md written
-✔  Done — pending/ and done/ are ready
+✔  Done — stories/pending/ and stories/done/ are ready
 ```
 
 Non-interactive:
@@ -120,17 +120,27 @@ To define or update principles:
 ### Folder structure
 
 ```
-pending/
-  01-auth/
-    _epic.md                     ← epic overview
-    story-02-password-reset.md   ← what to build and why
+stories/
+  pending/
+    01-auth/
+      _epic.md                     ← epic overview
+      story-02-password-reset.md   ← what to build and why
 
-done/
-  01-auth/
-    story-01-login-flow.md       ← completed, with implementation notes
+  done/
+    01-auth/
+      story-01-login-flow.md       ← completed, with implementation notes
 ```
 
-Work lives in `pending/`. Completed work moves to `done/`. Both are plain markdown your AI tools read as context.
+By default, work lives under `stories/`. Active work goes in `stories/pending/`, completed work in `stories/done/`. Both are plain markdown your AI tools read as context.
+
+To use a different container (or keep the old root-level layout):
+
+```bash
+alphaspec init --stories-dir specs      # specs/pending/ + specs/done/
+alphaspec init --stories-dir .          # pending/ + done/ at project root
+```
+
+Re-running init with a different `--stories-dir` on an existing project will offer to relocate your stories automatically.
 
 ### Epics and stories
 
@@ -179,6 +189,7 @@ Detects which AI tools are present and configures them interactively. Running `i
 | Flag | Description |
 |------|-------------|
 | `-t, --tools <list>` | Comma-separated tool IDs (`claude-code`, `cursor`, `windsurf`, `github-copilot`, `cline`), `all`, or `none` |
+| `-s, --stories-dir <path>` | Container directory for `pending/` and `done/` (default: `stories`) |
 | `-f, --force` | Overwrite existing configuration |
 | `-y, --yes` | Skip interactive prompts (auto-selects detected tools) |
 | `-d, --dir <path>` | Target directory (defaults to cwd) |
@@ -194,7 +205,7 @@ Removes only what alphaspec added. Your own content in `CLAUDE.md`, `copilot-ins
 | Flag | Description |
 |------|-------------|
 | `-y, --yes` | Skip all confirmations |
-| `--purge` | Also delete `pending/` and `done/` (asks for confirmation unless `--yes`) |
+| `--purge` | Also delete `pending/` and `done/` under the configured stories directory (asks for confirmation unless `--yes`) |
 | `-d, --dir <path>` | Target directory (defaults to cwd) |
 
 ## Customising prompts
@@ -207,7 +218,7 @@ Prompt source files are copied to `.alphaspec/prompts/` during init. Edit them t
 - **Not for large cross-functional teams.** It's built for solo developers and small teams who want lightweight structure, not enterprise ceremony.
 - **Not a specification language.** Stories are intentionally brief and human-readable, not formal specs.
 - **Not opinionated about your stack.** It doesn't care what language, framework, or CI system you use.
-- **Not opinionated about version control.** It doesn't modify your `.gitignore` — you decide whether to commit `pending/` and `done/`.
+- **Not opinionated about version control.** It doesn't modify your `.gitignore` — you decide whether to commit your stories directory.
 
 ## Contributing
 

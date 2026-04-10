@@ -2,6 +2,7 @@ import { mkdir, writeFile, rename, readFile, stat } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { renderTemplate, type TemplateVars } from './templates';
 
 export function resolveTemplatesDir(): string {
   if (process.env.ALPHASPEC_TEMPLATES_DIR) {
@@ -46,7 +47,8 @@ export async function pathExists(filePath: string): Promise<boolean> {
   }
 }
 
-export async function readTemplate(relPath: string): Promise<string> {
+export async function readTemplate(relPath: string, vars?: TemplateVars): Promise<string> {
   const fullPath = join(resolveTemplatesDir(), relPath);
-  return readFile(fullPath, 'utf-8');
+  const content = await readFile(fullPath, 'utf-8');
+  return vars ? renderTemplate(content, vars) : content;
 }

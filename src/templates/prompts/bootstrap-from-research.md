@@ -14,7 +14,7 @@ Downstream prompts depend on what you produce here:
 - **create-stories** refines and extends the stories you generate
 - **implement-story** builds what the stories describe
 - **verify-story** reviews the implementation against principles and acceptance criteria
-- **complete-story** refines stories to match reality and archives them to `done/`
+- **complete-story** refines stories to match reality and archives them to `{{doneDir}}/`
 
 Every story you generate must be a **verifiable increment** — scoped so that implement-story can build it and complete-story can verify it. If a story is too vague to verify, it's too vague to ship.
 
@@ -276,7 +276,7 @@ Use sequential numbering: epics from 01 upward in the order proposed, stories wi
 
 Give the user a summary:
 
-> Created N epics with M total stories in `pending/`.
+> Created N epics with M total stories in `{{pendingDir}}/`.
 >
 > Foundational decisions are documented in the relevant epics' Key Decisions sections. Deferred decisions are placed in the stories where they'll be made — when those stories arrive, part of the work will be researching and choosing, with much better context than we have today.
 >

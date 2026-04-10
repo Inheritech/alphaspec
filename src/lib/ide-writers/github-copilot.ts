@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { unlink } from 'node:fs/promises';
 import { ensureDir, safeWrite, readIfExists, pathExists, readTemplate } from '../fs-utils';
 import { replaceOrAppendSentinelBlock, removeSentinelBlock } from '../sentinels';
-import { PROMPT_NAMES, PROMPT_SLUG_PREFIX } from '../templates';
+import { PROMPT_NAMES, PROMPT_SLUG_PREFIX, type TemplateVars } from '../templates';
 
 // Skills — auto-loaded in agent mode by relevance
 const SKILLS_BASE = '.github/skills';
@@ -13,19 +13,19 @@ const INSTRUCTIONS_FILE = '.github/copilot-instructions.md';
 
 // NOTE: This writer never touches .github/agents/ — that is a separate Copilot concept.
 
-export async function apply(dir: string): Promise<void> {
+export async function apply(dir: string, vars?: TemplateVars): Promise<void> {
   // Write skills (SKILL.md per slug)
   for (const slug of PROMPT_NAMES) {
     const skillDir = join(dir, SKILLS_BASE, `${PROMPT_SLUG_PREFIX}${slug}`);
     await ensureDir(skillDir);
-    const content = await readTemplate(`prompts/${slug}.md`);
+    const content = await readTemplate(`prompts/${slug}.md`, vars);
     await safeWrite(join(skillDir, 'SKILL.md'), content);
   }
 
   // Write/update workflow instructions in copilot-instructions.md (user-owned, sentinel)
   const instructionsPath = join(dir, INSTRUCTIONS_FILE);
   await ensureDir(join(dir, '.github'));
-  const instructionContent = await readTemplate('instructions/github-copilot.md');
+  const instructionContent = await readTemplate('instructions/github-copilot.md', vars);
   const existing = (await readIfExists(instructionsPath)) ?? '';
   const updated = replaceOrAppendSentinelBlock(existing, instructionContent);
   await safeWrite(instructionsPath, updated);

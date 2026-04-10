@@ -7,12 +7,12 @@ The user wants to define or refine their project's principles. Optional input fr
 
 ## Context: alphaspec workflow
 
-You are operating within alphaspec, a Story-Driven Development (SDD) workflow. The project organizes work into stories grouped by epics inside `pending/`. Completed stories move to `done/`. The file you are about to create or refine — `.alphaspec/PRINCIPLES.md` — is the project's system constitution. Every other prompt in this workflow checks against it:
+You are operating within alphaspec, a Story-Driven Development (SDD) workflow. The project organizes work into stories grouped by epics inside `{{pendingDir}}/`. Completed stories move to `{{doneDir}}/`. The file you are about to create or refine — `.alphaspec/PRINCIPLES.md` — is the project's system constitution. Every other prompt in this workflow checks against it:
 
 - **create-stories** — Creates stories that must be verifiable increments against these principles
 - **implement-story** — Reads PRINCIPLES.md before writing any code, surfaces conflicts
 - **verify-story** — Reviews implementation against these principles as a quality gate
-- **complete-story** — Refines stories to match reality and archives them to `done/`
+- **complete-story** — Refines stories to match reality and archives them to `{{doneDir}}/`
 
 Your job is to help the user define requirements that are durable enough to guide all of that. You are not passively recording what the user tells you — you are an architectural advisor who discovers what the project is trying to achieve, derives what that implies, and articulates it as a clear set of requirements with context.
 

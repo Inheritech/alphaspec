@@ -55,15 +55,15 @@ async function fileExists(p: string): Promise<boolean> {
 }
 
 describe('init — no tools', () => {
-  it('creates pending/ done/ and .alphaspec/ with no IDE files', async () => {
+  it('creates stories/pending/ stories/done/ and .alphaspec/ with no IDE files', async () => {
     const dir = await freshDir();
     await runInit({ dir, tools: 'none', yes: true });
 
-    expect(await fileExists(join(dir, 'pending'))).toBe(true);
-    expect(await fileExists(join(dir, 'done'))).toBe(true);
+    expect(await fileExists(join(dir, 'stories', 'pending'))).toBe(true);
+    expect(await fileExists(join(dir, 'stories', 'done'))).toBe(true);
     expect(await fileExists(join(dir, '.alphaspec', 'config.json'))).toBe(true);
-    expect(await fileExists(join(dir, 'pending', 'README.md'))).toBe(true);
-    expect(await fileExists(join(dir, 'done', 'README.md'))).toBe(true);
+    expect(await fileExists(join(dir, 'stories', 'pending', 'README.md'))).toBe(true);
+    expect(await fileExists(join(dir, 'stories', 'done', 'README.md'))).toBe(true);
 
     // AGENTS.md should be created (universal writer always runs)
     expect(await fileExists(join(dir, 'AGENTS.md'))).toBe(true);
@@ -72,7 +72,7 @@ describe('init — no tools', () => {
     expect(await fileExists(join(dir, '.claude'))).toBe(false);
   });
 
-  it('config.json records the correct version and empty tools array', async () => {
+  it('config.json records the correct version, empty tools array, and storiesDir', async () => {
     const dir = await freshDir();
     await runInit({ dir, tools: 'none', yes: true });
 
@@ -81,6 +81,7 @@ describe('init — no tools', () => {
     expect(Array.isArray(config.tools)).toBe(true);
     expect(config.tools).toHaveLength(0);
     expect(config.version).toBeDefined();
+    expect(config.storiesDir).toBe('stories');
   });
 });
 
@@ -145,9 +146,9 @@ describe('remove — claude-code', () => {
 
     expect(await fileExists(join(dir, '.claude', 'skills', 'alphaspec.create-stories'))).toBe(false);
     expect(await fileExists(join(dir, '.alphaspec'))).toBe(false);
-    // --purge + --yes deletes pending/ and done/ too
-    expect(await fileExists(join(dir, 'pending'))).toBe(false);
-    expect(await fileExists(join(dir, 'done'))).toBe(false);
+    // --purge + --yes deletes stories/pending/ and stories/done/ too
+    expect(await fileExists(join(dir, 'stories', 'pending'))).toBe(false);
+    expect(await fileExists(join(dir, 'stories', 'done'))).toBe(false);
   });
 
   it('preserves existing CLAUDE.md content outside sentinel block', async () => {
@@ -168,8 +169,8 @@ describe('remove — claude-code', () => {
       expect(content).toContain('My Rules');
     }
     // pending/ and done/ are untouched (no --purge)
-    expect(await fileExists(join(dir, 'pending'))).toBe(true);
-    expect(await fileExists(join(dir, 'done'))).toBe(true);
+    expect(await fileExists(join(dir, 'stories', 'pending'))).toBe(true);
+    expect(await fileExists(join(dir, 'stories', 'done'))).toBe(true);
   });
 });
 
@@ -184,8 +185,60 @@ describe('remove — universal', () => {
 
     // AGENTS.md should be deleted (was only alphaspec content)
     expect(await fileExists(join(dir, 'AGENTS.md'))).toBe(false);
-    // pending/ and done/ untouched without --purge
+    // stories/pending/ and stories/done/ untouched without --purge
+    expect(await fileExists(join(dir, 'stories', 'pending'))).toBe(true);
+    expect(await fileExists(join(dir, 'stories', 'done'))).toBe(true);
+  });
+});
+
+describe('init — custom storiesDir', () => {
+  it('--stories-dir specs creates specs/pending/ and specs/done/', async () => {
+    const dir = await freshDir();
+    await runInit({ dir, tools: 'none', storiesDir: 'specs', yes: true });
+
+    expect(await fileExists(join(dir, 'specs', 'pending'))).toBe(true);
+    expect(await fileExists(join(dir, 'specs', 'done'))).toBe(true);
+    expect(await fileExists(join(dir, 'specs', 'pending', 'README.md'))).toBe(true);
+    expect(await fileExists(join(dir, 'specs', 'done', 'README.md'))).toBe(true);
+
+    const raw = await readFile(join(dir, '.alphaspec', 'config.json'), 'utf-8');
+    const config = JSON.parse(raw);
+    expect(config.storiesDir).toBe('specs');
+  });
+
+  it('--stories-dir . creates root-level pending/ and done/ (backward compat)', async () => {
+    const dir = await freshDir();
+    await runInit({ dir, tools: 'none', storiesDir: '.', yes: true });
+
     expect(await fileExists(join(dir, 'pending'))).toBe(true);
     expect(await fileExists(join(dir, 'done'))).toBe(true);
+    expect(await fileExists(join(dir, 'pending', 'README.md'))).toBe(true);
+    expect(await fileExists(join(dir, 'done', 'README.md'))).toBe(true);
+
+    const raw = await readFile(join(dir, '.alphaspec', 'config.json'), 'utf-8');
+    const config = JSON.parse(raw);
+    expect(config.storiesDir).toBe('.');
+  });
+
+  it('template variables are resolved in written prompts (no raw {{…}})', async () => {
+    const dir = await freshDir();
+    await runInit({ dir, tools: 'none', storiesDir: 'work', yes: true });
+
+    const prompt = await readFile(join(dir, '.alphaspec', 'prompts', 'create-stories.md'), 'utf-8');
+    expect(prompt).not.toContain('{{pendingDir}}');
+    expect(prompt).not.toContain('{{doneDir}}');
+    expect(prompt).toContain('work/pending');
+    expect(prompt).toContain('work/done');
+  });
+
+  it('remove --purge reads storiesDir from config and deletes correct dirs', async () => {
+    const dir = await freshDir();
+    await runInit({ dir, tools: 'none', storiesDir: 'specs', yes: true });
+    await runRemove({ dir, yes: true, purge: true });
+
+    expect(await fileExists(join(dir, 'specs', 'pending'))).toBe(false);
+    expect(await fileExists(join(dir, 'specs', 'done'))).toBe(false);
+    // Container should be cleaned up if empty
+    expect(await fileExists(join(dir, 'specs'))).toBe(false);
   });
 });

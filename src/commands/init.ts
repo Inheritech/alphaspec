@@ -1,8 +1,9 @@
 import { join, resolve } from 'node:path';
+import { rename as fsRename } from 'node:fs/promises';
 import * as clack from '@clack/prompts';
-import { ensureDir, safeWrite, readIfExists, readTemplate } from '../lib/fs-utils';
+import { ensureDir, safeWrite, readIfExists, readTemplate, pathExists } from '../lib/fs-utils';
 import { detectTools, ALL_TOOLS, TOOL_LABELS, type ToolId } from '../lib/detect-tools';
-import { PROMPT_NAMES } from '../lib/templates';
+import { PROMPT_NAMES, buildTemplateVars, type TemplateVars } from '../lib/templates';
 import * as claudeCode from '../lib/ide-writers/claude-code';
 import * as cursor from '../lib/ide-writers/cursor';
 import * as windsurf from '../lib/ide-writers/windsurf';
@@ -10,7 +11,7 @@ import * as githubCopilot from '../lib/ide-writers/github-copilot';
 import * as cline from '../lib/ide-writers/cline';
 import * as universalAgents from '../lib/ide-writers/universal-agents';
 
-const WRITERS: Record<ToolId, { apply: (dir: string) => Promise<void>; remove: (dir: string) => Promise<void> }> = {
+const WRITERS: Record<ToolId, { apply: (dir: string, vars?: TemplateVars) => Promise<void>; remove: (dir: string) => Promise<void> }> = {
   'claude-code': claudeCode,
   'cursor': cursor,
   'windsurf': windsurf,
@@ -18,9 +19,12 @@ const WRITERS: Record<ToolId, { apply: (dir: string) => Promise<void>; remove: (
   'cline': cline,
 };
 
+const DEFAULT_STORIES_DIR = 'stories';
+
 export interface InitOptions {
   dir?: string;
   tools?: string;
+  storiesDir?: string;
   force?: boolean;
   yes?: boolean;
 }
@@ -34,12 +38,14 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
   const configPath = join(dir, '.alphaspec', 'config.json');
   const existingConfigRaw = await readIfExists(configPath);
   let existingTools: ToolId[] = [];
+  let existingStoriesDir: string | undefined;
   let isExtendMode = false;
 
   if (existingConfigRaw && !options.force) {
     try {
-      const config = JSON.parse(existingConfigRaw) as { tools?: ToolId[] };
+      const config = JSON.parse(existingConfigRaw) as { tools?: ToolId[]; storiesDir?: string };
       existingTools = config.tools ?? [];
+      existingStoriesDir = config.storiesDir;
       isExtendMode = true;
       clack.log.info(
         `Already initialized (extend mode). Use --force to overwrite everything.`,
@@ -90,55 +96,111 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
   if (isExtendMode) {
     toolsToApply = selectedTools.filter(t => !existingTools.includes(t));
     toolsForConfig = [...new Set([...existingTools, ...selectedTools])];
-    if (toolsToApply.length === 0) {
-      clack.outro('Nothing to add — all selected tools are already configured.');
-      return;
-    }
   } else {
     toolsToApply = selectedTools;
     toolsForConfig = selectedTools;
   }
 
+  // Resolve storiesDir: CLI flag → existing config → default
+  // Existing configs without storiesDir field default to "." (backward compat)
+  const storiesDir = options.storiesDir
+    ?? (isExtendMode ? (existingStoriesDir ?? '.') : DEFAULT_STORIES_DIR);
+  const templateVars = buildTemplateVars(storiesDir);
+
+  // Detect if storiesDir is changing (relocation needed)
+  const storiesDirChanging = isExtendMode
+    && options.storiesDir !== undefined
+    && (existingStoriesDir ?? '.') !== storiesDir;
+
+  // If nothing to do in extend mode (no new tools, no storiesDir change), bail early
+  if (isExtendMode && toolsToApply.length === 0 && !storiesDirChanging && !options.force) {
+    clack.outro('Nothing to add — all selected tools are already configured.');
+    return;
+  }
+
+  // Force-apply all templates + IDE writers when storiesDir changes
+  const forceTemplates = options.force || storiesDirChanging;
+
   const spinner = clack.spinner();
   spinner.start('Setting up alphaspec…');
 
   try {
+    // Handle relocation if storiesDir is changing
+    if (storiesDirChanging) {
+      const oldStoriesDir = existingStoriesDir ?? '.';
+      const oldPending = join(dir, oldStoriesDir, 'pending');
+      const oldDone = join(dir, oldStoriesDir, 'done');
+      const newPending = join(dir, storiesDir, 'pending');
+      const newDone = join(dir, storiesDir, 'done');
+
+      const oldPendingExists = await pathExists(oldPending);
+      const oldDoneExists = await pathExists(oldDone);
+
+      if (oldPendingExists || oldDoneExists) {
+        spinner.stop('Stories directory is changing.');
+
+        let doMove = options.yes;
+        if (!doMove) {
+          const confirmMove = await clack.confirm({
+            message: `Move stories from ${oldStoriesDir === '.' ? '(project root)' : oldStoriesDir + '/'} to ${storiesDir}/?`,
+            initialValue: true,
+          });
+          doMove = !clack.isCancel(confirmMove) && confirmMove;
+        }
+
+        if (doMove) {
+          await ensureDir(join(dir, storiesDir));
+          if (oldPendingExists) await fsRename(oldPending, newPending);
+          if (oldDoneExists) await fsRename(oldDone, newDone);
+          clack.log.success(`Moved stories to ${storiesDir}/`);
+        } else {
+          clack.log.warn(
+            `Stories directory updated to ${storiesDir}/ in config, but old files remain at ${oldStoriesDir === '.' ? 'project root' : oldStoriesDir + '/'}.`,
+          );
+        }
+
+        spinner.start('Setting up alphaspec…');
+      }
+    }
+
     // Create folder structure
-    await ensureDir(join(dir, 'pending'));
-    await ensureDir(join(dir, 'done'));
+    await ensureDir(join(dir, storiesDir, 'pending'));
+    await ensureDir(join(dir, storiesDir, 'done'));
     await ensureDir(join(dir, '.alphaspec', 'prompts'));
 
-    // Write README files for pending/ and done/ (skip if they already exist, unless --force)
-    const pendingReadmePath = join(dir, 'pending', 'README.md');
-    const doneReadmePath = join(dir, 'done', 'README.md');
+    // Write README files for pending/ and done/ (skip if they already exist, unless forced)
+    const pendingReadmePath = join(dir, storiesDir, 'pending', 'README.md');
+    const doneReadmePath = join(dir, storiesDir, 'done', 'README.md');
 
-    if (options.force || !(await readIfExists(pendingReadmePath))) {
-      await safeWrite(pendingReadmePath, await readTemplate('readmes/pending.md'));
+    if (forceTemplates || !(await readIfExists(pendingReadmePath))) {
+      await safeWrite(pendingReadmePath, await readTemplate('readmes/pending.md', templateVars));
     }
-    if (options.force || !(await readIfExists(doneReadmePath))) {
-      await safeWrite(doneReadmePath, await readTemplate('readmes/done.md'));
+    if (forceTemplates || !(await readIfExists(doneReadmePath))) {
+      await safeWrite(doneReadmePath, await readTemplate('readmes/done.md', templateVars));
     }
 
     // Copy prompts to .alphaspec/prompts/ as source of truth
     for (const slug of PROMPT_NAMES) {
       const destPath = join(dir, '.alphaspec', 'prompts', `${slug}.md`);
-      if (options.force || !(await readIfExists(destPath))) {
-        await safeWrite(destPath, await readTemplate(`prompts/${slug}.md`));
+      if (forceTemplates || !(await readIfExists(destPath))) {
+        await safeWrite(destPath, await readTemplate(`prompts/${slug}.md`, templateVars));
       }
     }
 
-    // Apply IDE writers
-    for (const tool of toolsToApply) {
-      await WRITERS[tool].apply(dir);
+    // Apply IDE writers — new tools, or all tools when storiesDir changes
+    const writersToApply = forceTemplates ? toolsForConfig : toolsToApply;
+    for (const tool of writersToApply) {
+      await WRITERS[tool].apply(dir, templateVars);
     }
 
     // Always apply universal AGENTS.md writer
-    await universalAgents.apply(dir);
+    await universalAgents.apply(dir, templateVars);
 
     // Write config
     const config = {
       version: process.env.ALPHASPEC_VERSION ?? '0.0.0',
       tools: toolsForConfig,
+      storiesDir,
       initializedAt: existingConfigRaw
         ? JSON.parse(existingConfigRaw).initializedAt ?? new Date().toISOString()
         : new Date().toISOString(),
@@ -153,9 +215,12 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
   }
 
   // Summary
+  const pendingLabel = templateVars.pendingDir + '/';
+  const doneLabel = templateVars.doneDir + '/';
+
   clack.log.success('Created:');
-  clack.log.message('  pending/         — active epics and stories');
-  clack.log.message('  done/            — completed work (historical reference)');
+  clack.log.message(`  ${pendingLabel.padEnd(18)}— active epics and stories`);
+  clack.log.message(`  ${doneLabel.padEnd(18)}— completed work (historical reference)`);
   clack.log.message('  .alphaspec/      — config and prompt source of truth');
 
   if (toolsToApply.length > 0) {
@@ -168,7 +233,7 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
   clack.log.message('');
   clack.log.info(
     'alphaspec does not modify your .gitignore. ' +
-    'Add pending/ and done/ yourself if you want them to stay local.',
+    `Add ${pendingLabel} and ${doneLabel} yourself if you want them to stay local.`,
   );
 
   clack.outro(

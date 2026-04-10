@@ -2,23 +2,23 @@ import { join } from 'node:path';
 import { rm, unlink } from 'node:fs/promises';
 import { ensureDir, safeWrite, readIfExists, readTemplate } from '../fs-utils';
 import { replaceOrAppendSentinelBlock, removeSentinelBlock } from '../sentinels';
-import { PROMPT_NAMES, PROMPT_SLUG_PREFIX } from '../templates';
+import { PROMPT_NAMES, PROMPT_SLUG_PREFIX, type TemplateVars } from '../templates';
 
 const SKILLS_BASE = '.claude/skills';
 const INSTRUCTIONS_FILE = 'CLAUDE.md';
 
-export async function apply(dir: string): Promise<void> {
+export async function apply(dir: string, vars?: TemplateVars): Promise<void> {
   // Write each prompt as a skill folder containing SKILL.md
   for (const slug of PROMPT_NAMES) {
     const skillDir = join(dir, SKILLS_BASE, `${PROMPT_SLUG_PREFIX}${slug}`);
     await ensureDir(skillDir);
-    const content = await readTemplate(`prompts/${slug}.md`);
+    const content = await readTemplate(`prompts/${slug}.md`, vars);
     await safeWrite(join(skillDir, 'SKILL.md'), content);
   }
 
   // Write/update workflow instructions in CLAUDE.md (user-owned, uses sentinel)
   const instructionsPath = join(dir, INSTRUCTIONS_FILE);
-  const instructionContent = await readTemplate('instructions/claude-code.md');
+  const instructionContent = await readTemplate('instructions/claude-code.md', vars);
   const existing = (await readIfExists(instructionsPath)) ?? '';
   const updated = replaceOrAppendSentinelBlock(existing, instructionContent);
   await safeWrite(instructionsPath, updated);

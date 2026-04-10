@@ -10,8 +10,8 @@ This project uses alphaspec, a lightweight workflow for tracking work alongside 
 
 ### Folder structure
 
-- `pending/` contains active epics. Each epic is a folder `NN-epic-name/` with an `_epic.md` overview and one or more `story-NN-name.md` files.
-- `done/` mirrors the structure but contains completed work. Treat it as historical reference.
+- `{{pendingDir}}/` contains active epics. Each epic is a folder `NN-epic-name/` with an `_epic.md` overview and one or more `story-NN-name.md` files.
+- `{{doneDir}}/` mirrors the structure but contains completed work. Treat it as historical reference.
 - `.alphaspec/prompts/` contains the source of truth for alphaspec prompts.
 - `.alphaspec/PRINCIPLES.md` (if it exists) contains the project's guiding principles. Read it at the start of any session and respect it when making decisions.
 
@@ -46,4 +46,4 @@ Decisions that are hard or impossible to reverse — technology choices, third-p
 - It is not a project management tool. No time, no points, no sprints, no velocity.
 - It is not a specification language. Stories are intentionally brief and human-readable.
 - It is not opinionated about your stack, your testing setup, your CI, or your conventions outside of the workflow itself.
-- It does not modify your `.gitignore`. You decide whether to commit `pending/` and `done/`.
+- It does not modify your `.gitignore`. You decide whether to commit `{{pendingDir}}/` and `{{doneDir}}/`.

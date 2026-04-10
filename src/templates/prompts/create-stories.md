@@ -7,12 +7,12 @@ The user wants to create new stories. Their description follows: ${input:descrip
 
 ## Context: alphaspec workflow
 
-You are operating within alphaspec, a Story-Driven Development (SDD) workflow. The project organizes work into stories grouped by epics inside `pending/`. Completed stories move to `done/`.
+You are operating within alphaspec, a Story-Driven Development (SDD) workflow. The project organizes work into stories grouped by epics inside `{{pendingDir}}/`. Completed stories move to `{{doneDir}}/`.
 
 Each story you create will flow through the rest of the workflow:
 - **implement-story** will read the story, read PRINCIPLES.md, and build what it describes
 - **verify-story** will review the implementation against the story's acceptance criteria and the project's principles as a quality gate
-- **complete-story** will refine the story to match reality, append what was learned, and archive it to `done/`
+- **complete-story** will refine the story to match reality, append what was learned, and archive it to `{{doneDir}}/`
 
 This means every story you create must be a **verifiable increment** — scoped so it can be independently implemented, tested against principles, and completed. If a story can't be verified as done on its own, it needs to be scoped differently.
 
@@ -82,7 +82,7 @@ If the user did not provide any references, do not invent them.
 
 ## Step 5 — Find the right home
 
-List all epic folders currently in `pending/`. For each, read its `_epic.md` summary. Decide:
+List all epic folders currently in `{{pendingDir}}/`. For each, read its `_epic.md` summary. Decide:
 
 - Does this story (or stories) clearly belong inside an existing epic? If yes, propose that epic and explain why.
 - Is this work significantly different in theme from any existing epic? If yes, propose a new epic. The new epic gets the next sequential number after the highest existing one. Suggest a kebab-case folder name and a one-sentence summary.
@@ -122,7 +122,7 @@ The test: will this criterion still be true after a refactor? "User can see thei
 
 ## Step 7 — Write the story (or stories)
 
-Once the destination is confirmed, write each story file at `pending/NN-epic-name/story-MM-name.md` where MM is the next available story number. Use this exact structure:
+Once the destination is confirmed, write each story file at `{{pendingDir}}/NN-epic-name/story-MM-name.md` where MM is the next available story number. Use this exact structure:
 
 ```
 # Story: <Title>
@@ -167,7 +167,7 @@ If writing multiple stories, number them sequentially within the epic.
 
 ## Step 8 — If a new epic was created
 
-Also write `pending/NN-epic-name/_epic.md`:
+Also write `{{pendingDir}}/NN-epic-name/_epic.md`:
 
 ```
 # Epic NN: <Title>

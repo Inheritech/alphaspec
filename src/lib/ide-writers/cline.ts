@@ -1,21 +1,21 @@
 import { join } from 'node:path';
 import { unlink } from 'node:fs/promises';
 import { ensureDir, safeWrite, pathExists, readTemplate } from '../fs-utils';
-import { PROMPT_NAMES, PROMPT_SLUG_PREFIX } from '../templates';
+import { PROMPT_NAMES, PROMPT_SLUG_PREFIX, type TemplateVars } from '../templates';
 
 const PROMPTS_DIR = '.clinerules/prompts';
 const RULES_FILE = '.clinerules/alphaspec.md';
 
-export async function apply(dir: string): Promise<void> {
+export async function apply(dir: string, vars?: TemplateVars): Promise<void> {
   // Write each prompt as a flat .md file in .clinerules/prompts/
   await ensureDir(join(dir, PROMPTS_DIR));
   for (const slug of PROMPT_NAMES) {
-    const content = await readTemplate(`prompts/${slug}.md`);
+    const content = await readTemplate(`prompts/${slug}.md`, vars);
     await safeWrite(join(dir, PROMPTS_DIR, `${PROMPT_SLUG_PREFIX}${slug}.md`), content);
   }
 
   // Write alphaspec instructions to .clinerules/alphaspec.md (alphaspec-owned, direct write)
-  const instructionContent = await readTemplate('instructions/cline.md');
+  const instructionContent = await readTemplate('instructions/cline.md', vars);
   await safeWrite(join(dir, RULES_FILE), instructionContent);
 }
 

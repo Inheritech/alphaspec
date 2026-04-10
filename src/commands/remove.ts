@@ -33,11 +33,13 @@ export async function runRemove(options: RemoveOptions = {}): Promise<void> {
   const configPath = join(dir, '.alphaspec', 'config.json');
   const configRaw = await readIfExists(configPath);
   let configuredTools: ToolId[] = [...ALL_TOOLS]; // best-effort: assume all
+  let storiesDir = '.'; // backward-compat default
 
   if (configRaw) {
     try {
-      const config = JSON.parse(configRaw) as { tools?: ToolId[] };
+      const config = JSON.parse(configRaw) as { tools?: ToolId[]; storiesDir?: string };
       configuredTools = config.tools ?? ALL_TOOLS;
+      storiesDir = config.storiesDir ?? '.';
     } catch {
       clack.log.warn('Could not parse .alphaspec/config.json — attempting best-effort removal of all tools.');
     }
@@ -102,20 +104,36 @@ export async function runRemove(options: RemoveOptions = {}): Promise<void> {
   // pending/ and done/ — only touched when --purge is passed.
   // --yes skips the confirmation, otherwise we ask.
   if (options.purge) {
+    const pendingPath = join(dir, storiesDir, 'pending');
+    const donePath = join(dir, storiesDir, 'done');
+    const pendingLabel = storiesDir === '.' ? 'pending/' : `${storiesDir}/pending/`;
+    const doneLabel = storiesDir === '.' ? 'done/' : `${storiesDir}/done/`;
+
     if (!options.yes) {
       const confirmPurge = await clack.confirm({
-        message: 'Delete pending/ and done/? This will remove your stories.',
+        message: `Delete ${pendingLabel} and ${doneLabel}? This will remove your stories.`,
         initialValue: false,
       });
       if (clack.isCancel(confirmPurge) || !confirmPurge) {
-        clack.log.info('Kept pending/ and done/');
+        clack.log.info(`Kept ${pendingLabel} and ${doneLabel}`);
         clack.outro('alphaspec removed.');
         return;
       }
     }
-    await rm(join(dir, 'pending'), { recursive: true, force: true });
-    await rm(join(dir, 'done'), { recursive: true, force: true });
-    clack.log.success('Deleted pending/ and done/');
+    await rm(pendingPath, { recursive: true, force: true });
+    await rm(donePath, { recursive: true, force: true });
+    // Clean up empty container directory if storiesDir is not root
+    if (storiesDir !== '.') {
+      const containerDir = join(dir, storiesDir);
+      const { readdir } = await import('node:fs/promises');
+      try {
+        const remaining = await readdir(containerDir);
+        if (remaining.length === 0) {
+          await rm(containerDir, { recursive: true, force: true });
+        }
+      } catch { /* container already gone */ }
+    }
+    clack.log.success(`Deleted ${pendingLabel} and ${doneLabel}`);
   }
 
   clack.outro('alphaspec removed.');
