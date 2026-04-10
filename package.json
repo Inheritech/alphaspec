@@ -1,7 +1,8 @@
 {
   "name": "alphaspec",
   "version": "0.2.0",
-  "description": "Lightweight, opinionated SDD scaffolder for AI coding assistants",
+  "description": "Track what needs to be built — plain work to be done markdown for AI tools",
+  "license": "Apache-2.0",
   "type": "module",
   "bin": {
     "alphaspec": "./dist/cli.js"
