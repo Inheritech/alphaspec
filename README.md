@@ -105,7 +105,7 @@ Useful for spinning up a project quickly without translating research into tasks
 
 ## Principles
 
-Principles are engineering guidelines that live in `.alphaspec/PRINCIPLES.md` — things like "no ORM, raw SQL only" or "every API endpoint must be idempotent." They act as the project's constitution.
+Principles live in `.alphaspec/PRINCIPLES.md`. They're the project's constitution — architectural decisions, quality standards, and non-functional requirements derived from what the project actually is.
 
 Once defined, principles integrate into the rest of the workflow automatically: `implement-story` reads them before writing code, `verify-story` checks compliance against them.
 
