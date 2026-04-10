@@ -12,7 +12,9 @@ export async function apply(dir: string, vars?: TemplateVars): Promise<void> {
   for (const slug of PROMPT_NAMES) {
     const skillDir = join(dir, SKILLS_BASE, `${PROMPT_SLUG_PREFIX}${slug}`);
     await ensureDir(skillDir);
-    const content = await readTemplate(`prompts/${slug}.md`, vars);
+    let content = await readTemplate(`prompts/${slug}.md`, vars);
+    // Prefix the frontmatter name so the skill registers as "alphaspec.<slug>"
+    content = content.replace(`name: ${slug}`, `name: ${PROMPT_SLUG_PREFIX}${slug}`);
     await safeWrite(join(skillDir, 'SKILL.md'), content);
   }
 

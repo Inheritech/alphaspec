@@ -11,7 +11,9 @@ export async function apply(dir: string, vars?: TemplateVars): Promise<void> {
   // Write each prompt as a flat .md file in .windsurf/workflows/
   await ensureDir(join(dir, WORKFLOWS_DIR));
   for (const slug of PROMPT_NAMES) {
-    const content = await readTemplate(`prompts/${slug}.md`, vars);
+    let content = await readTemplate(`prompts/${slug}.md`, vars);
+    // Prefix the frontmatter name so the workflow registers as "alphaspec.<slug>"
+    content = content.replace(`name: ${slug}`, `name: ${PROMPT_SLUG_PREFIX}${slug}`);
     await safeWrite(join(dir, WORKFLOWS_DIR, `${PROMPT_SLUG_PREFIX}${slug}.md`), content);
   }
 
