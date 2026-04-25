@@ -4,6 +4,7 @@ import * as clack from '@clack/prompts';
 import { ensureDir, safeWrite, readIfExists, readTemplate, pathExists } from '../lib/fs-utils';
 import { detectTools, ALL_TOOLS, TOOL_LABELS, type ToolId } from '../lib/detect-tools';
 import { buildTemplateVars, type TemplateVars } from '../lib/templates';
+import { planMigrations } from '../lib/migrations';
 import * as claudeCode from '../lib/ide-writers/claude-code';
 import * as cursor from '../lib/ide-writers/cursor';
 import * as windsurf from '../lib/ide-writers/windsurf';
@@ -43,7 +44,20 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
 
   if (existingConfigRaw && !options.force) {
     try {
-      const config = JSON.parse(existingConfigRaw) as { tools?: ToolId[]; storiesDir?: string };
+      const config = JSON.parse(existingConfigRaw) as { tools?: ToolId[]; storiesDir?: string; version?: string };
+
+      // Drift detection: if the install is on an older version, route to `upgrade`.
+      const installedVersion = config.version ?? '0.0.0';
+      const currentVersion = process.env.ALPHASPEC_VERSION ?? '0.0.0';
+      const pendingMigrations = planMigrations(installedVersion, currentVersion);
+      if (pendingMigrations.length > 0) {
+        clack.log.warn(
+          `This project is on alphaspec ${installedVersion}; current version is ${currentVersion}.`,
+        );
+        clack.outro('Run `alphaspec upgrade` to migrate, then re-run init if you want to add tools.');
+        return;
+      }
+
       existingTools = config.tools ?? [];
       existingStoriesDir = config.storiesDir;
       isExtendMode = true;

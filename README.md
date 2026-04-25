@@ -194,6 +194,21 @@ Detects which AI tools are present and configures them interactively. Running `i
 | `-y, --yes` | Skip interactive prompts (auto-selects detected tools) |
 | `-d, --dir <path>` | Target directory (defaults to cwd) |
 
+### `alphaspec upgrade`
+
+```bash
+alphaspec upgrade [options]
+```
+
+Upgrades an existing alphaspec install in place. Reads the project's recorded version, runs the matching migrations (cleaning up obsolete files from older versions), re-applies the IDE writers for the configured tools, and bumps the recorded version. Idempotent — re-running on an up-to-date install is a no-op.
+
+| Flag | Description |
+|------|-------------|
+| `-y, --yes` | Skip the confirmation prompt |
+| `-d, --dir <path>` | Target directory (defaults to cwd) |
+
+> Upgrading from an older alphaspec? Update the package (`npm i -g alphaspec@latest` or your equivalent) and run `alphaspec upgrade` in the project. `init` will detect the version drift and route you here.
+
 ### `alphaspec remove`
 
 ```bash

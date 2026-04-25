@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { runInit } from './commands/init';
 import { runRemove } from './commands/remove';
+import { runUpgrade } from './commands/upgrade';
 
 const VERSION = process.env.ALPHASPEC_VERSION ?? '0.0.0';
 
@@ -22,6 +23,22 @@ program
   .action(async (opts: { dir?: string; tools?: string; storiesDir?: string; force?: boolean; yes?: boolean }) => {
     try {
       await runInit(opts);
+    } catch (err) {
+      if (err instanceof Error) {
+        process.stderr.write(`\nError: ${err.message}\n`);
+      }
+      process.exit(1);
+    }
+  });
+
+program
+  .command('upgrade')
+  .description('Upgrade an existing alphaspec install to the current version')
+  .option('-d, --dir <path>', 'target directory (defaults to cwd)')
+  .option('-y, --yes', 'skip confirmation prompt')
+  .action(async (opts: { dir?: string; yes?: boolean }) => {
+    try {
+      await runUpgrade(opts);
     } catch (err) {
       if (err instanceof Error) {
         process.stderr.write(`\nError: ${err.message}\n`);
