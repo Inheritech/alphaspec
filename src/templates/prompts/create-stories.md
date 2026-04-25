@@ -32,22 +32,37 @@ Read the user's description. Identify:
 
 Before asking questions or writing anything, assess whether the user's description is one story or should be split into multiple.
 
+**Scope is measured by implementation effort and the number of distinct concerns being built — not by how the brief is worded.** A short description can hide a large story; a long description can describe a tiny one. Examples:
+
+- *"Build auth with MFA, magic links, and auditing"* — 6 words, but each clause is its own subsystem. **3+ stories.**
+- *"Make the signup button gradient with WCAG 2.2 AA contrast"* — 11 words, but one element, one concern, one verification. **1 story.**
+
+Word count, AC count, and description length are not complexity signals. Judge by what is actually being built.
+
 **Apply these heuristics:**
 
 1. **Conjunction test** — If the description contains multiple unrelated features joined by "and", "plus", "also", each branch is likely a separate story.
 2. **Acceptance criteria clustering** — Mentally draft the ACs. If they cluster into distinct functional groups with no overlap, that suggests separate stories.
 3. **Workflow steps** — If the work involves sequential steps where each delivers independent end-to-end value, consider splitting by step.
-4. **Independence check** — After any proposed split, each story must deliver value on its own (vertical slice, not horizontal layer). If a story only makes sense with another story completed first, reconsider the split.
+4. **Smallest verifiable increment** — Could this story be cut into smaller pieces that each still deliver something a user (or system) can observe and verify? If yes, prefer the smaller cuts. The goal is the smallest *verifiable* increment, not the smallest possible diff. Atomic does not mean trivial.
+5. **Implementation surface** — How many distinct subsystems, flows, or concerns must be built or touched? Each one is a candidate boundary. A story that bundles UI + backend + a new data model is a story hiding three stories.
+6. **Independence check** — After any proposed split, each story must deliver value on its own (vertical slice, not horizontal layer). If a story only makes sense with another story completed first, reconsider the split.
 
 **When in doubt, don't split.** Splitting overhead is real. One well-scoped story is better than three artificially separated ones.
 
 ### How splitting looks in practice
 
-**Don't split** — "Add a search box to the dashboard" → Single story. One feature, one UI element, one flow. Splitting this would create artificial overhead.
+**Don't split — short brief, single concern** — "Add a search box to the dashboard" → Single story. One feature, one UI element, one flow. Splitting this would create artificial overhead.
 
-**Do split (conjunction test)** — "Build a settings page where users can update their profile, change their password, and manage notification preferences" → 3 stories. Each has independent acceptance criteria, independent value, and can ship separately.
+**Don't split — verbose brief, single concern** — "Make the signup button use a gradient background that meets WCAG 2.2 AA contrast against both light and dark themes, with a hover state that lifts slightly" → Single story. One element, one styling concern, one verification.
+
+**Do split (conjunction test, short brief)** — "Build auth with MFA, magic links, and auditing" → 3 stories. Each clause is a distinct subsystem with its own data, its own user flow, and its own verification. The brief is short; the work isn't.
+
+**Do split (conjunction test, longer brief)** — "Build a settings page where users can update their profile, change their password, and manage notification preferences" → 3 stories. Each has independent acceptance criteria, independent value, and can ship separately. All belong to one epic ("settings") because together they form one coherent capability.
 
 **Do split (concern separation)** — "Set up the CI pipeline and deploy to staging" → 2 stories. CI pipeline is infrastructure tooling. Deployment is environment configuration. Different verification, different expertise, different blast radius.
+
+**Do split (oversized single feature)** — "Build user profile management — avatar upload, bio editing, social links, account deletion, two-factor setup" → 5 stories in one epic. Each is a distinct capability, separately verifiable, separately shippable. The bundle is too big to implement and review as one story even though it's all "profile management."
 
 ### If you see a split
 
@@ -60,6 +75,95 @@ Tell the user how many stories you see, where the boundaries are, and why — th
 > Each can be implemented and verified independently. Want me to proceed with this split, or would you prefer a different breakdown?
 
 Never split silently. The user must see and approve the reasoning.
+
+## Step 2.5 — Scope check: does this span multiple architectural areas?
+
+Some descriptions don't just split into multiple stories within one feature — they span multiple **architectural areas** that each represent a complete capability of their own. These "big briefs" require a story map first: surface the proposed decomposition, confirm it with the user, and only then proceed to draft individual stories.
+
+**The trigger is structural, not numeric.** A brief with 5 stories that all build one coherent feature is a Step 2 split, not a Step 2.5 map. A brief with 3 stories spread across frontend + ingestion + query API is Step 2.5 territory — three architectural areas, each a separate epic.
+
+**Signals of a big brief:**
+- The description spans **two or more architectural surfaces** that ship and reason independently (e.g. frontend app + backend service + infrastructure; auth subsystem + onboarding subsystem + billing subsystem)
+- The work breaks into **separately deployable units** with their own lifecycles or owners
+- The description reads more like a product brief or system redesign than a single feature request
+- Phrases like "build the whole X system", "redesign Y end-to-end", "set up everything needed for Z"
+
+**If you detect a big brief, produce a story map before drafting anything.** A story map shows how work clusters into epics (each epic a complete capability), which epics are new vs existing, and the proposed stories per epic — all in one view the user can review and reshape before committing.
+
+### Story map format
+
+Surface the map and ask up to four clarifying questions alongside it. Wait for the user to confirm the decomposition before proceeding to Step 3. Each epic in the map must describe a complete capability — when its stories are all done, the user can do something end-to-end.
+
+> This brief spans [N] architectural area(s). Here's how I'd break it down:
+>
+> **Epic: [name — new or existing]** — *delivers: [one-sentence complete capability]*
+> → [story title] — [one-sentence purpose]
+> → [story title] — [one-sentence purpose]
+>
+> **Epic: [name of second epic]** — *delivers: [one-sentence complete capability]*
+> → [story title] — [one-sentence purpose]
+>
+> Questions before I draft the individual stories:
+> 1. [clarifying question — not scope-extending]
+>
+> Does this decomposition look right, or would you adjust any boundaries?
+
+### Story map examples
+
+**Multi-epic — replacing an auth system**
+
+Brief: "We need to replace session-based auth with JWT. New login flow, token refresh, updating all protected routes, and logout-everywhere."
+
+> This brief spans 2 architectural areas (auth itself + session management).
+>
+> **Epic: 04-auth-migration** (new) — *delivers: users can authenticate via JWT end-to-end across all protected routes*
+> → JWT login flow — replace session login with access + refresh token pair
+> → Protected route middleware — all API routes verify JWT instead of session cookie
+>
+> **Epic: 05-session-management** (new) — *delivers: users have full control over their active sessions across devices*
+> → Token refresh — client silently refreshes expired access tokens
+> → Logout everywhere — user can invalidate all active sessions from account settings
+>
+> Questions:
+> 1. Should token refresh happen on the client or be handled server-side via a cookie?
+>
+> Does this split look right?
+
+**Multi-epic — building an analytics system**
+
+Brief: "Build the analytics dashboard system — frontend, ingestion pipeline, and query API."
+
+> This brief spans 3 architectural areas, each a complete capability.
+>
+> **Epic: 06-analytics-ingestion** (new) — *delivers: events from all client surfaces land reliably in storage*
+> → Event ingestion endpoint — accepts events, validates, persists
+> → Client SDK — emits standardized events from browser and server
+>
+> **Epic: 07-analytics-query** (new) — *delivers: stored events can be queried by dimension and time range with acceptable latency*
+> → Query API — exposes aggregated metrics over the event store
+> → Query caching — keep hot queries fast under load
+>
+> **Epic: 08-analytics-dashboard** (new) — *delivers: users can explore the metrics through a self-serve UI*
+> → Dashboard shell — page layout, navigation, time-range picker
+> → Metric panels — render configured queries with charts
+>
+> Each epic is a separately deployable unit — ingestion can ship before the dashboard exists; the dashboard works against the query API once it's online.
+>
+> Does this decomposition look right?
+
+**Do NOT produce a story map — small brief, clear scope**
+
+Brief: "Add a search box to the dashboard that filters projects by name."
+
+Assessment: one story. One UI element, one interaction, one verifiable outcome. Applying a story map here adds ceremony without benefit. Proceed to Step 3 directly.
+
+### When to skip the story map
+
+Default to Step 2 split heuristics unless the scope clearly spans multiple architectural areas.
+
+- **Multi-story single-feature briefs** belong in Step 2, not Step 2.5. The settings page (profile + password + notifications) is one epic with 3 stories — propose a normal split, not a story map. Three stories inside one feature don't need ceremony; they need the conjunction test.
+- **Story count is not the trigger.** Five tightly related stories building one capability stay in Step 2. Two stories spanning two architectural areas (e.g. "build the API and the CLI for X") belong in Step 2.5 — even though there are only two stories.
+- **The trigger is "would these stories live in different epics because they represent different complete capabilities?"** If yes → Step 2.5. If no → Step 2.
 
 ## Step 3 — Ask up to four refinement questions, only if needed
 
@@ -74,19 +178,91 @@ Hard rules for these questions:
 - Each question must be answerable in one sentence.
 - Stop asking as soon as you have enough to write the story honestly.
 
-## Step 4 — Capture references
+## Step 4 — Capture artifacts and references
 
-If the user provided links, documentation, file paths, or any external research as part of the story discussion, capture them in the story's Notes section as a "Sources" subsection. These links are grounding for whoever implements the story later — they are the source of truth the implementer consults to avoid making decisions in a vacuum.
+The person implementing this story will not have access to anything the user shared during this conversation — not images, not mockups, not architecture diagrams. Everything the user provided must be transcribed into the story itself. The story is the implementer's only context.
 
-If the user did not provide any references, do not invent them.
+**Visual artifacts** (mockups, wireframes, screenshots, diagrams) require structured transcription. A caption or summary is not enough — the implementer needs to reconstruct what was shown.
+
+For each visual artifact, transcribe it into the story's `### Artifacts` subsection using this structure:
+
+**What it depicts** — one sentence summarising the artifact's subject and purpose
+
+**Layout** — the spatial structure: regions, hierarchy, visual flow of elements top-to-bottom, left-to-right, or as grouped
+
+**Components** — enumerated UI elements, diagram nodes, or visual parts with their roles and relationships to each other
+
+**Copy** — any text visible in the artifact, verbatim (labels, button text, placeholder text, error messages, headings)
+
+**Style cues** — colors, typography, spacing — only those relevant to implementation decisions (e.g. "primary action button uses brand blue", "error state uses red border")
+
+**Behavior implications** — what the visual implies about interactions, states, or transitions (hover states, empty states, loading states, error states)
+
+### Artifact transcription examples
+
+**Good — a login form mockup**
+
+> **What it depicts** — Login screen for a web application with email/password fields and a "Sign in with Google" option.
+>
+> **Layout** — Centered card on white background. Company logo at top. Email field, password field, then "Forgot password?" link below the password field. Primary "Sign In" button full-width. Divider with "or" text. "Sign in with Google" button full-width below.
+>
+> **Components** — Email input (label: "Email address", placeholder: "you@example.com"). Password input (label: "Password", type password, placeholder hidden). "Forgot password?" text link (right-aligned below password). "Sign In" primary button. Horizontal divider. "Sign in with Google" secondary button with Google G icon.
+>
+> **Copy** — "Welcome back", "Email address", "Password", "Forgot password?", "Sign In", "or", "Sign in with Google"
+>
+> **Style cues** — "Sign In" button uses primary brand color (dark navy). "Sign in with Google" is outlined/ghost style. "Forgot password?" is blue link text.
+>
+> **Behavior implications** — Clicking "Forgot password?" should navigate to a password reset flow. Both auth paths (email and Google) should land on the same post-auth destination.
+
+**Good — an architecture diagram**
+
+> **What it depicts** — System architecture showing the relationship between a Next.js frontend, a Node API layer, and a PostgreSQL database, with a Redis cache between API and DB.
+>
+> **Layout** — Three-tier horizontal flow: Client (left) → API (centre) → Data layer (right). Redis sits inside the Data layer tier above PostgreSQL.
+>
+> **Components** — "Browser / Next.js App" box (client tier). Arrow labelled "REST/JSON" pointing right. "Node.js API" box (middle tier). Two arrows from API into data layer: one to "Redis Cache" (labelled "hot reads"), one to "PostgreSQL" (labelled "source of truth"). Arrow from Redis back to PostgreSQL (labelled "cache miss → fallback").
+>
+> **Copy** — "Browser / Next.js App", "Node.js API", "Redis Cache", "PostgreSQL", "REST/JSON", "hot reads", "source of truth", "cache miss → fallback"
+>
+> **Style cues** — Cache miss arrow is dashed to indicate it's conditional.
+>
+> **Behavior implications** — API should check Redis before hitting PostgreSQL. On cache miss, fetch from Postgres and warm the cache. Cache invalidation is not shown — that's an open question.
+
+**Bad — caption only (implementer is left guessing)**
+
+> The user attached a mockup of the checkout flow. See the image for layout details.
+
+This tells the implementer nothing. They cannot see the image. Transcription is required.
+
+**Bad — partial transcription (missing behavior implications)**
+
+> Layout: two columns. Left has product list, right has order summary. There is a "Place Order" button.
+
+Missing: what the columns contain beyond labels, the copy on elements, what "Place Order" does or navigates to, any loading/error states implied.
+
+### Scope-filter the transcription to this story
+
+When a user provides a broad artifact (full-app mockup, multi-screen flow, end-to-end architecture diagram), do **not** transcribe everything into one story. Transcribe only what is relevant to *this* story's scope. Other regions of the artifact belong in *their own* stories' `### Artifacts` sections, not duplicated everywhere.
+
+If you're writing multiple stories from the same brief and the artifact spans them, partition the transcription by story:
+- For story A, transcribe only the regions A needs to ship
+- For story B, transcribe only the regions B needs to ship
+- Mention briefly in each story that the artifact also covers areas owned by other stories, so the implementer knows the full design exists
+
+This keeps each story focused and prevents reviewer fatigue (a single broad mockup transcribed five times across five stories is 5× the review burden for no extra signal).
+
+**For non-visual references** (links, documentation, file paths, external research): capture them in the `### Sources` subsection. These are the source-of-truth documents the implementer consults to avoid making decisions in a vacuum. If the user provided no references, do not invent them.
 
 ## Step 5 — Find the right home
 
+An **epic** is a coherent unit of complete functionality — when its stories are all done, the user can do something useful end-to-end (the auth system, the search experience, the billing flow). Epics are not arbitrary groupings of related-ish stories; they represent capabilities.
+
 List all epic folders currently in `{{pendingDir}}/`. For each, read its `_epic.md` summary. Decide:
 
-- Does this story (or stories) clearly belong inside an existing epic? If yes, propose that epic and explain why.
-- Is this work significantly different in theme from any existing epic? If yes, propose a new epic. The new epic gets the next sequential number after the highest existing one. Suggest a kebab-case folder name and a one-sentence summary.
-- If multiple stories from a split: they usually belong in the same epic. If they're thematically distinct, they may go to different epics — surface this to the user.
+- **Does this story contribute to an existing epic's complete-capability goal?** If yes, propose that epic and explain why.
+- **Does this story represent a different complete capability?** If yes, propose a new epic. The new epic gets the next sequential number after the highest existing one. Suggest a kebab-case folder name and a one-sentence summary describing the capability the epic delivers when done.
+- If multiple stories from a Step 2 split: they almost always belong in the same epic — they're stable increments toward one capability. If they're thematically distinct enough to be different capabilities, surface that to the user (and consider whether you should have applied Step 2.5 instead).
+- If multiple stories from a Step 2.5 story map: each architectural area is its own epic. Place stories accordingly.
 - Is the placement ambiguous between two epics? Surface that ambiguity and let the user decide.
 
 Do not write anything to disk yet. Wait for user confirmation.
@@ -99,7 +275,12 @@ Before writing any story files, verify each story against these checks:
 - **Each acceptance criterion is an observable outcome.** "User can reset their password via email" is an outcome. "Add a POST /api/auth/reset-password endpoint" is an implementation step. Rewrite implementation steps as outcomes.
 - **No scope was added that the user didn't ask for.** Compare each AC to the user's original description. If an AC covers something the user never mentioned, cut it.
 - **This story is a verifiable increment.** Can implement-story build it? Can verify-story check it against principles? If not, the scope needs adjustment.
+- **This is the smallest verifiable increment, not a bundle.** Estimate the implementation effort and the number of distinct concerns. If the story bundles multiple observable outcomes that could each ship and verify on their own, split it — regardless of how short the description is. Atomic does not mean trivial; the goal is the smallest *verifiable* increment.
+- **Each epic delivers a complete capability.** Re-read the epic this story lives in. When all its stories are done, can the user do something useful end-to-end? If the epic is a bag of loosely related stories, reconsider the placement (Step 5) — the boundaries may be wrong.
 - **Acceptance criteria include principles-derived checks where applicable.** If PRINCIPLES.md exists and a principle directly constrains this story's work, there should be an AC that makes that constraint verifiable. A story introducing a new public module in a project with "every public module has contract tests" needs an AC for contract tests.
+- **If visual artifacts were provided, can the implementer reconstruct what was shown without seeing the original?** Check: does the Artifacts subsection cover layout, components, copy, and behavior implications? If not, return to Step 4 and expand it.
+- **Artifact transcription is scoped to this story.** If a broad artifact (full-app mockup, multi-screen flow) was transcribed in full into a single story, partition it (Step 4). The implementer for this story does not need pixels of unrelated screens.
+- **Reviewer load is sustainable.** Estimate total lines across all stories you're about to write. If the user will face roughly more than 1000 lines of total review across the batch, look for ways to scope-trim artifact transcriptions, reference broad artifacts rather than transcribe them in full, or surface the load to the user before writing.
 
 ### What good vs bad acceptance criteria look like
 
@@ -158,6 +339,10 @@ Simple stories don't need subsections — a few sentences describing the need is
 
 <Context that completes the reader's understanding — ambient constraints, gotchas, design rationale, open questions, domain knowledge. If someone reading the story would ask "but what about...", that belongs here. Use whatever subsection headers fit the content.>
 
+### Artifacts
+
+<Only if the user provided images, mockups, diagrams, or other non-text materials. The implementer will not have access to the originals — describe each artifact in structured prose using: What it depicts / Layout / Components / Copy / Style cues / Behavior implications. Omit this section entirely if no visual artifacts were provided.>
+
 ### Sources
 
 <Only if the user provided references. Bullet list of links, file paths, or document names that ground this story.>
@@ -176,10 +361,14 @@ Also write `{{pendingDir}}/NN-epic-name/_epic.md`:
 
 <2-4 sentences describing what this epic is about and what it accomplishes. No implementation details.>
 
+## Capability delivered
+
+<One paragraph describing what the user can do end-to-end when this epic is complete. This is the "definition of done" for the epic as a whole — when all its stories ship, this is the user-visible state of the world. If you cannot articulate one coherent capability, the epic boundaries are wrong (return to Step 5).>
+
 ## Goals
 
-- <goal 1>
-- <goal 2>
+- <goal 1 — supports the capability above>
+- <goal 2 — supports the capability above>
 
 ## Key Decisions
 
@@ -196,17 +385,23 @@ Also write `{{pendingDir}}/NN-epic-name/_epic.md`:
 
 Update the `_epic.md` Stories table to include the new stories as new rows.
 
-After writing, suggest the next step: "Stories are ready. Run `/alphaspec.implement-story` on the first one to start building."
+After writing, suggest the next step: "Stories are ready. Run `/alphaspec-implement-story` on the first one to start building, or `/alphaspec-refine-story` on any story for a gap-analysis pass first."
 
 ## Critical rules
 
 - **Every story is a verifiable increment.** It can be independently implemented, tested against principles, and completed. No horizontal layers disguised as stories.
+- **Story scope is measured by implementation effort and number of distinct concerns, not by description length or AC count.** A short brief can hide a large story; a long brief can describe a tiny one. Judge by what's being built, not how it's described.
+- **Stories are the smallest verifiable increment that delivers user-visible value.** Bundles of multiple outcomes belong as separate stories in the same epic.
+- **Epics represent complete capabilities — fully usable functionality.** When an epic's stories are all done, the user can do something useful end-to-end. Stories are stable incremental steps toward that capability. Never group unrelated stories into one epic for convenience.
+- **Step 2.5 trigger is architectural, not numeric.** Multiple stories within one feature stay in Step 2. A story map (Step 2.5) is for briefs that span multiple architectural areas, each its own complete capability.
 - **Follow the user's guidance.** Do not lead, suggest extensions, or add scope the user didn't request. Capture what the user wants, not what you think they should want.
 - **Acceptance criteria are observable outcomes, not implementation steps.** If an AC describes HOW instead of WHAT, rewrite it. Write requirements that endure beyond refactors, not implementation details that rot.
 - **Prefer fewer stories over more.** Splitting overhead is real. One well-scoped story beats three artificially separated ones. Never split without the user's explicit approval.
+- **For big briefs, produce a story map and wait for user confirmation before drafting any story files.** Never silently decompose a complex brief — the user must see and approve the shape of the work.
+- **If the user provided visual artifacts, transcribe them fully into the Artifacts subsection — but scope the transcription to this story.** The implementer will not see the originals — the story is their only context. A vague summary is not enough. A broad artifact transcribed in full into every story is also wrong; partition by story.
 - **Do not implement stories. Do not modify PRINCIPLES.md.** Your scope is story creation and refinement only.
 - **You are done when** every story has Description + AC + Notes (and Key Decisions / Related where applicable), the split heuristics are satisfied, and the stories are ready for implement-story.
-- Stories are brief. Aim for under 100 lines, never exceed 200.
+- **Stories stay dense, not short.** Spec sections (Description, Acceptance Criteria, Key Decisions, Related) should stay tight — aim for under 100 lines combined; if the spec sections alone approach 200 lines, the story is too big and should be split. Notes, Artifacts, and Sources scale with what the user provided. The whole story softly targets under 200 lines for reviewer ergonomics — exceeding it is acceptable when artifact transcription genuinely requires it, but flag the overage to the user when proposing the story. Every line should be information the implementer needs.
 - No implementation details, no code, no file paths in spec sections (file paths in Sources are fine).
 - No story points.
 - Do not invent acceptance criteria or Key Decisions the user did not imply.

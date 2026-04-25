@@ -221,7 +221,7 @@ Once the user has approved the final set, write `.alphaspec/PRINCIPLES.md`:
 
 Only include sections that have principles. A project that doesn't need non-functional requirements yet doesn't get that section. No metadata, no version, no date, no governance.
 
-After writing, suggest the next step: "Now that the project's principles are defined, you can use `/alphaspec.create-stories` to start capturing work, or `/alphaspec.bootstrap-from-research` to turn research into a full plan."
+After writing, suggest the next step: "Now that the project's principles are defined, you can use `/alphaspec-create-stories` to start capturing work, or `/alphaspec-bootstrap-from-research` to turn research into a full plan."
 
 ## Critical rules
 

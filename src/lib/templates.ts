@@ -1,5 +1,6 @@
 export const PROMPT_NAMES = [
   'create-stories',
+  'refine-story',
   'complete-story',
   'implement-story',
   'verify-story',
@@ -9,8 +10,8 @@ export const PROMPT_NAMES = [
 
 export type PromptName = (typeof PROMPT_NAMES)[number];
 
-/** Prefix applied to all prompt output filenames/folders so they surface as `alphaspec.<slug>`. */
-export const PROMPT_SLUG_PREFIX = 'alphaspec.';
+/** Prefix applied to all prompt output filenames/folders so they surface as `alphaspec-<slug>`. */
+export const PROMPT_SLUG_PREFIX = 'alphaspec-';
 
 /** Variables interpolated into templates when they are written to disk. */
 export type TemplateVars = Record<string, string>;

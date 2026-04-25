@@ -62,7 +62,7 @@ The core workflow has four steps. Each one is a slash command you run inside you
 Describe what you want to build. The prompt creates stories grouped under an epic, with acceptance criteria and context — capturing the *what* and *why*, not the *how*.
 
 ```
-/alphaspec.create-stories
+/alphaspec-create-stories
 ```
 
 ### 2. Implement a story
@@ -74,7 +74,7 @@ It works equally well with planning agents and execution agents. Invoke it durin
 > **Note:** This step is optional. Stories are just markdown — you can work from them directly if you prefer.
 
 ```
-/alphaspec.implement-story
+/alphaspec-implement-story
 ```
 
 ### 3. Verify your work
@@ -82,7 +82,7 @@ It works equally well with planning agents and execution agents. Invoke it durin
 Review what was built against the story's acceptance criteria. The prompt acts as a critical reviewer — checking each criterion, flagging drift from the original intent, and producing a structured pass/fail report.
 
 ```
-/alphaspec.verify-story
+/alphaspec-verify-story
 ```
 
 ### 4. Complete and archive
@@ -90,7 +90,7 @@ Review what was built against the story's acceptance criteria. The prompt acts a
 Once verified, archive the story. The prompt refines the story to match what was actually built, appends implementation notes, and moves it from `pending/` to `done/`.
 
 ```
-/alphaspec.complete-story
+/alphaspec-complete-story
 ```
 
 ## Bootstrap from research
@@ -98,7 +98,7 @@ Once verified, archive the story. The prompt refines the story to match what was
 If you're starting a project from research output — notes from Perplexity, ChatGPT, a design spike, or any other source — this prompt converts that into a structured set of epics and stories. You review what it produces, keep what fits, discard what doesn't.
 
 ```
-/alphaspec.bootstrap-from-research
+/alphaspec-bootstrap-from-research
 ```
 
 Useful for spinning up a project quickly without translating research into tasks by hand.
@@ -112,7 +112,7 @@ Once defined, principles integrate into the rest of the workflow automatically: 
 To define or update principles:
 
 ```
-/alphaspec.define-principles
+/alphaspec-define-principles
 ```
 
 ## Concepts
@@ -158,11 +158,11 @@ alphaspec installs prompts as **skills** — a format supported across AI coding
 
 ### Claude Code
 
-Slash commands in chat: `/alphaspec.create-stories`, `/alphaspec.implement-story`, etc. Skills are also loaded autonomously when Claude detects relevant context.
+Slash commands in chat: `/alphaspec-create-stories`, `/alphaspec-implement-story`, etc. Skills are also loaded autonomously when Claude detects relevant context.
 
 ### GitHub Copilot
 
-Slash commands in chat: `/alphaspec.create-stories`, `/alphaspec.implement-story`, etc. In agent mode, skills are loaded automatically by relevance.
+Slash commands in chat: `/alphaspec-create-stories`, `/alphaspec-implement-story`, etc. In agent mode, skills are loaded automatically by relevance.
 
 ### Cursor
 
@@ -174,7 +174,7 @@ Open the Cascade panel and select a workflow from the picker. The rules file is 
 
 ### Cline
 
-Reference a prompt by name in chat (e.g. "Use the alphaspec.create-stories prompt to..."). The rules file is loaded automatically from `.clinerules/`.
+Reference a prompt by name in chat (e.g. "Use the alphaspec-create-stories prompt to..."). The rules file is loaded automatically from `.clinerules/`.
 
 ## CLI reference
 
@@ -207,10 +207,6 @@ Removes only what alphaspec added. Your own content in `CLAUDE.md`, `copilot-ins
 | `-y, --yes` | Skip all confirmations |
 | `--purge` | Also delete `pending/` and `done/` under the configured stories directory (asks for confirmation unless `--yes`) |
 | `-d, --dir <path>` | Target directory (defaults to cwd) |
-
-## Customising prompts
-
-Prompt source files are copied to `.alphaspec/prompts/` during init. Edit them there to adapt the workflow to your project. Changes take effect the next time a prompt is invoked.
 
 ## What alphaspec isn't
 

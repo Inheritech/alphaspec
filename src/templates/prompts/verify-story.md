@@ -124,8 +124,8 @@ One of:
 - **FAIL** — One or more ACs failed, or a critical principle violation was found. List what must be addressed.
 
 After the verdict, suggest the next step:
-- If PASS or PASS WITH NOTES: "Run `/alphaspec.complete-story` to refine and archive."
-- If FAIL: "Address the issues above, then re-run `/alphaspec.verify-story`."
+- If PASS or PASS WITH NOTES: "Run `/alphaspec-complete-story` to refine and archive."
+- If FAIL: "Address the issues above, then re-run `/alphaspec-verify-story`."
 
 ## Critical rules
 

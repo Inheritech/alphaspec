@@ -31,7 +31,7 @@ From the story, extract:
 
 If the story has Sources, read them before doing anything else. They are the user's way of telling you "here's the source of truth, don't guess".
 
-If anything in the story is ambiguous or missing critical information, stop and ask the user before doing anything else.
+If anything in the story is ambiguous or missing critical information, stop and ask the user before doing anything else. If the story has multiple gaps, the user may want to run `/alphaspec-refine-story` on it first to surface and address them systematically before implementation begins.
 
 ## Step 2 — Plan your approach, then identify one-way doors
 
@@ -86,7 +86,7 @@ It is always better to pause and ask than to ship a tower of workarounds. The us
 
 Run the project's full validation suite. Discover what that means from the project's `package.json` scripts, `Makefile`, `justfile`, or equivalent. If the project has no validation configured, run at minimum: typecheck (if applicable) and any existing tests. Do not skip failing tests, suppress errors, or comment out assertions.
 
-When the implementation is complete and validated, tell the user: "Implementation complete. Run `/alphaspec.verify-story` for quality review, or `/alphaspec.complete-story` to archive directly."
+When the implementation is complete and validated, tell the user: "Implementation complete. Run `/alphaspec-verify-story` for quality review, or `/alphaspec-complete-story` to archive directly."
 
 ## Critical rules
 

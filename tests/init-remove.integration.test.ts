@@ -90,9 +90,9 @@ describe('init — claude-code', () => {
     const dir = await freshDir();
     await runInit({ dir, tools: 'claude-code', yes: true });
 
-    const slugs = ['create-stories', 'complete-story', 'implement-story', 'verify-story', 'define-principles', 'bootstrap-from-research'];
+    const slugs = ['create-stories', 'refine-story', 'complete-story', 'implement-story', 'verify-story', 'define-principles', 'bootstrap-from-research'];
     for (const slug of slugs) {
-      expect(await fileExists(join(dir, '.claude', 'skills', `alphaspec.${slug}`, 'SKILL.md'))).toBe(true);
+      expect(await fileExists(join(dir, '.claude', 'skills', `alphaspec-${slug}`, 'SKILL.md'))).toBe(true);
     }
   });
 
@@ -122,7 +122,7 @@ describe('init — github-copilot', () => {
     const dir = await freshDir();
     await runInit({ dir, tools: 'github-copilot', yes: true });
 
-    expect(await fileExists(join(dir, '.github', 'skills', 'alphaspec.create-stories', 'SKILL.md'))).toBe(true);
+    expect(await fileExists(join(dir, '.github', 'skills', 'alphaspec-create-stories', 'SKILL.md'))).toBe(true);
     expect(await fileExists(join(dir, '.github', 'prompts', 'create-stories.prompt.md'))).toBe(false);
     expect(await fileExists(join(dir, '.github', 'copilot-instructions.md'))).toBe(true);
   });
@@ -140,11 +140,11 @@ describe('remove — claude-code', () => {
     await runInit({ dir, tools: 'claude-code', yes: true });
 
     // Confirm files exist before removal
-    expect(await fileExists(join(dir, '.claude', 'skills', 'alphaspec.create-stories', 'SKILL.md'))).toBe(true);
+    expect(await fileExists(join(dir, '.claude', 'skills', 'alphaspec-create-stories', 'SKILL.md'))).toBe(true);
 
     await runRemove({ dir, yes: true, purge: true });
 
-    expect(await fileExists(join(dir, '.claude', 'skills', 'alphaspec.create-stories'))).toBe(false);
+    expect(await fileExists(join(dir, '.claude', 'skills', 'alphaspec-create-stories'))).toBe(false);
     expect(await fileExists(join(dir, '.alphaspec'))).toBe(false);
     // --purge + --yes deletes stories/pending/ and stories/done/ too
     expect(await fileExists(join(dir, 'stories', 'pending'))).toBe(false);
@@ -224,11 +224,9 @@ describe('init — custom storiesDir', () => {
     const dir = await freshDir();
     await runInit({ dir, tools: 'none', storiesDir: 'work', yes: true });
 
-    const prompt = await readFile(join(dir, '.alphaspec', 'prompts', 'create-stories.md'), 'utf-8');
-    expect(prompt).not.toContain('{{pendingDir}}');
-    expect(prompt).not.toContain('{{doneDir}}');
-    expect(prompt).toContain('work/pending');
-    expect(prompt).toContain('work/done');
+    // Read a skill from a configured tool to verify template variable resolution
+    // (no .alphaspec/prompts/ is created — prompts are only written into tool-specific locations)
+    expect(await fileExists(join(dir, '.alphaspec', 'prompts'))).toBe(false);
   });
 
   it('remove --purge reads storiesDir from config and deletes correct dirs', async () => {

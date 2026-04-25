@@ -18,7 +18,7 @@ Downstream prompts depend on what you produce here:
 
 Every story you generate must be a **verifiable increment** — scoped so that implement-story can build it and complete-story can verify it. If a story is too vague to verify, it's too vague to ship.
 
-If the project already has `.alphaspec/PRINCIPLES.md`, read it before generating stories. The principles define the project's architectural, quality, and non-functional requirements — your stories should align with them. If PRINCIPLES.md doesn't exist yet, that's normal for a bootstrap — suggest the user run `/alphaspec.define-principles` after the bootstrap to establish the system constitution.
+If the project already has `.alphaspec/PRINCIPLES.md`, read it before generating stories. The principles define the project's architectural, quality, and non-functional requirements — your stories should align with them. If PRINCIPLES.md doesn't exist yet, that's normal for a bootstrap — suggest the user run `/alphaspec-define-principles` after the bootstrap to establish the system constitution.
 
 The input may be a file path, a URL, or pasted markdown content. Handle all three.
 
@@ -284,7 +284,7 @@ Give the user a summary:
 >
 > Cherry-pick freely — refine what's good, delete what doesn't fit, leave the rest for later. Each story is small enough that you can reshape any part without affecting the rest.
 >
-> Suggested next step: If you haven't defined your project's principles yet, run `/alphaspec.define-principles` to establish the system constitution. Then review epic 01 first since everything else depends on it. When you're ready to start work, run `/alphaspec.implement-story` on the first story.
+> Suggested next step: If you haven't defined your project's principles yet, run `/alphaspec-define-principles` to establish the system constitution. Then review epic 01 first since everything else depends on it. When you're ready to start work, run `/alphaspec-implement-story` on the first story.
 
 ## Critical rules
 

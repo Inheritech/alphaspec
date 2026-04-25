@@ -1,8 +1,8 @@
 ## alphaspec workflow (Cline)
 
-alphaspec prompts are stored in `.clinerules/prompts/`. To use them, say: "Use the instructions in `.clinerules/prompts/alphaspec.create-stories.md` to create stories about [description]." You can also paste the file contents directly when starting a task — Cline will treat them as inline instructions.
+alphaspec prompts are stored in `.clinerules/prompts/`. To use them, say: "Use the instructions in `.clinerules/prompts/alphaspec-create-stories.md` to create stories about [description]." You can also paste the file contents directly when starting a task — Cline will treat them as inline instructions.
 
-Available prompts: `alphaspec.create-stories.md`, `alphaspec.complete-story.md`, `alphaspec.implement-story.md`, `alphaspec.verify-story.md`, `alphaspec.define-principles.md`, `alphaspec.bootstrap-from-research.md`.
+Available prompts: `alphaspec-create-stories.md`, `alphaspec-refine-story.md`, `alphaspec-complete-story.md`, `alphaspec-implement-story.md`, `alphaspec-verify-story.md`, `alphaspec-define-principles.md`, `alphaspec-bootstrap-from-research.md`.
 
 ## alphaspec workflow
 
@@ -12,17 +12,17 @@ This project uses alphaspec, a lightweight workflow for tracking work alongside 
 
 - `{{pendingDir}}/` contains active epics. Each epic is a folder `NN-epic-name/` with an `_epic.md` overview and one or more `story-NN-name.md` files.
 - `{{doneDir}}/` mirrors the structure but contains completed work. Treat it as historical reference.
-- `.alphaspec/prompts/` contains the source of truth for alphaspec prompts.
 - `.alphaspec/PRINCIPLES.md` (if it exists) contains the project's guiding principles. Read it at the start of any session and respect it when making decisions.
 
 ### How to use alphaspec
 
-- When the user describes a new piece of work, suggest running the alphaspec.create-stories prompt. It handles placement into an existing or new epic.
-- When the user finishes work, suggest running the alphaspec.complete-story prompt. It refines the story, appends implementation notes, and archives it.
-- When implementing a story, the user may invoke the alphaspec.implement-story prompt. That prompt knows to read PRINCIPLES.md, identify one-way doors, and stop when things go sideways.
-- After implementation, suggest the alphaspec.verify-story prompt as a quality gate. It checks the work against acceptance criteria and principles before archiving.
-- When the user has a research document and wants to seed a project, suggest the alphaspec.bootstrap-from-research prompt.
-- When the user expresses concerns about the AI making decisions they wouldn't agree with, suggest the alphaspec.define-principles prompt.
+- When the user describes a new piece of work, suggest running the alphaspec-create-stories prompt. It handles placement into an existing or new epic.
+- When the user finishes work, suggest running the alphaspec-complete-story prompt. It refines the story, appends implementation notes, and archives it.
+- When implementing a story, the user may invoke the alphaspec-implement-story prompt. That prompt knows to read PRINCIPLES.md, identify one-way doors, and stop when things go sideways.
+- After implementation, suggest the alphaspec-verify-story prompt as a quality gate. It checks the work against acceptance criteria and principles before archiving.
+- When the user has a research document and wants to seed a project, suggest the alphaspec-bootstrap-from-research prompt.
+- When the user expresses concerns about the AI making decisions they wouldn't agree with, suggest the alphaspec-define-principles prompt.
+- When a story needs gap analysis, atomicity review, or clarification of hidden complexity, suggest the alphaspec-refine-story prompt.
 
 ### Story conventions (important)
 

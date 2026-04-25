@@ -12,7 +12,7 @@ export async function apply(dir: string, vars?: TemplateVars): Promise<void> {
   await ensureDir(join(dir, WORKFLOWS_DIR));
   for (const slug of PROMPT_NAMES) {
     let content = await readTemplate(`prompts/${slug}.md`, vars);
-    // Prefix the frontmatter name so the workflow registers as "alphaspec.<slug>"
+    // Prefix the frontmatter name so the workflow registers as "alphaspec-<slug>"
     content = content.replace(`name: ${slug}`, `name: ${PROMPT_SLUG_PREFIX}${slug}`);
     await safeWrite(join(dir, WORKFLOWS_DIR, `${PROMPT_SLUG_PREFIX}${slug}.md`), content);
   }

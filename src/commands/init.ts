@@ -3,7 +3,7 @@ import { rename as fsRename } from 'node:fs/promises';
 import * as clack from '@clack/prompts';
 import { ensureDir, safeWrite, readIfExists, readTemplate, pathExists } from '../lib/fs-utils';
 import { detectTools, ALL_TOOLS, TOOL_LABELS, type ToolId } from '../lib/detect-tools';
-import { PROMPT_NAMES, buildTemplateVars, type TemplateVars } from '../lib/templates';
+import { buildTemplateVars, type TemplateVars } from '../lib/templates';
 import * as claudeCode from '../lib/ide-writers/claude-code';
 import * as cursor from '../lib/ide-writers/cursor';
 import * as windsurf from '../lib/ide-writers/windsurf';
@@ -164,9 +164,9 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
     }
 
     // Create folder structure
+    await ensureDir(join(dir, '.alphaspec'));
     await ensureDir(join(dir, storiesDir, 'pending'));
     await ensureDir(join(dir, storiesDir, 'done'));
-    await ensureDir(join(dir, '.alphaspec', 'prompts'));
 
     // Write README files for pending/ and done/ (skip if they already exist, unless forced)
     const pendingReadmePath = join(dir, storiesDir, 'pending', 'README.md');
@@ -177,14 +177,6 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
     }
     if (forceTemplates || !(await readIfExists(doneReadmePath))) {
       await safeWrite(doneReadmePath, await readTemplate('readmes/done.md', templateVars));
-    }
-
-    // Copy prompts to .alphaspec/prompts/ as source of truth
-    for (const slug of PROMPT_NAMES) {
-      const destPath = join(dir, '.alphaspec', 'prompts', `${slug}.md`);
-      if (forceTemplates || !(await readIfExists(destPath))) {
-        await safeWrite(destPath, await readTemplate(`prompts/${slug}.md`, templateVars));
-      }
     }
 
     // Apply IDE writers — new tools, or all tools when storiesDir changes
@@ -221,7 +213,7 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
   clack.log.success('Created:');
   clack.log.message(`  ${pendingLabel.padEnd(18)}— active epics and stories`);
   clack.log.message(`  ${doneLabel.padEnd(18)}— completed work (historical reference)`);
-  clack.log.message('  .alphaspec/      — config and prompt source of truth');
+  clack.log.message('  .alphaspec/      — config');
 
   if (toolsToApply.length > 0) {
     clack.log.success('Configured:');
@@ -238,7 +230,7 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
 
   clack.outro(
     isExtendMode
-      ? `Extended. Try a prompt like /alphaspec.create-stories in your AI assistant.`
-      : `Ready. Try /alphaspec.create-stories to add your first story, or /alphaspec.bootstrap-from-research if you have a research doc.`,
+      ? `Extended. Try a prompt like /alphaspec-create-stories in your AI assistant.`
+      : `Ready. Try /alphaspec-create-stories to add your first story, or /alphaspec-bootstrap-from-research if you have a research doc.`,
   );
 }

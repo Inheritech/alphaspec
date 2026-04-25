@@ -42,7 +42,7 @@ Wait for the user's confirmation. Do not proceed until the user has explicitly a
 
 Stories are living documents. Before archiving, the story must reflect what was actually built.
 
-If the story hasn't been reviewed via `/alphaspec.verify-story`, suggest it: "Want to run verify-story first to check the implementation against principles, or proceed directly to archival?" Proceed based on the user's choice.
+If the story hasn't been reviewed via `/alphaspec-verify-story`, suggest it: "Want to run verify-story first to check the implementation against principles, or proceed directly to archival?" Proceed based on the user's choice.
 
 ### 2a — Read the story and compare it to reality
 

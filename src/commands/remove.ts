@@ -55,7 +55,7 @@ export async function runRemove(options: RemoveOptions = {}): Promise<void> {
     clack.log.message(`    - ${TOOL_LABELS[tool]}`);
   }
   clack.log.message('  • AGENTS.md sentinel block');
-  clack.log.message('  • .alphaspec/ (config and prompts)');
+  clack.log.message('  • .alphaspec/ (config)');
 
   // Main confirmation — skipped by --yes
   if (!options.yes) {
@@ -90,7 +90,7 @@ export async function runRemove(options: RemoveOptions = {}): Promise<void> {
     clack.log.success('Deleted .alphaspec/');
   } else {
     const deleteSpec = await clack.confirm({
-      message: 'Delete .alphaspec/ (config and prompts)?',
+      message: 'Delete .alphaspec/ (config)?',
       initialValue: true,
     });
     if (!clack.isCancel(deleteSpec) && deleteSpec) {
