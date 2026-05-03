@@ -46,10 +46,12 @@ If the story hasn't been reviewed via `/alphaspec-verify-story`, suggest it: "Wa
 
 ### 2a — Read the story and compare it to reality
 
-Read the current story file. Compare its Description, Acceptance Criteria, and Key Decisions to what was actually implemented during the session. Ask yourself:
+Read the current story file. Compare its Description, Acceptance Criteria, Out of Scope, Key Decisions, and (if present) Implementation Hints to what was actually implemented during the session. Ask yourself:
 
 - Does the Description still accurately describe what the work was about, or did the scope shift?
 - Are there acceptance criteria that no longer apply because the approach changed? Are there criteria that should have been there but weren't?
+- Did anything previously listed in **Out of Scope** actually get built? If yes, the scope expanded — surface it before archiving and decide together with the user whether to remove the item from Out of Scope (scope deliberately grew) or to flag the addition as accidental work that should be pulled back or split into its own story. Either way, the archived story must reflect the final intent.
+- If the story had **Implementation Hints**, did the actual implementation diverge materially? Hints are non-binding by design, so divergence is not a problem — but if the divergence is meaningful for future readers (a different approach was tried and chosen), capture it in the Implementation Notes appended below rather than rewriting the hints.
 - Were any of the original Key Decisions overridden by something the user decided during the work?
 
 ### 2b — Refine the story to match reality

@@ -195,7 +195,7 @@ Do NOT generate any stories yet. Wait for the user to approve, edit, or replace 
 
 Once the epic structure is approved, walk through the epics one at a time. For each epic, generate its stories before moving to the next. After each epic is done, save a checkpoint to memory and briefly tell the user "Done with epic N: <n> stories. Moving to epic N+1." This protects the work against context compaction and lets the user interrupt if they see something off.
 
-For each epic, generate 2-6 small stories. Follow the create-stories template structure: **Description → Acceptance Criteria → Key Decisions → Related → Notes**. Apply the same quality checks: WHAT not HOW, observable ACs, verifiable increments, principles-derived ACs where PRINCIPLES.md exists.
+For each epic, generate 2-6 small stories. Follow the create-stories template structure: **Description → Acceptance Criteria → Out of Scope → Key Decisions → Implementation Hints → Related → Notes**. Apply the same quality checks: WHAT not HOW, observable ACs, verifiable increments, principles-derived ACs where PRINCIPLES.md exists. **Out of Scope is mandatory** — list at least two concrete capabilities or behaviors this story does NOT deliver. **Implementation Hints** is optional and explicitly non-binding; when used, lead with the preamble "Any of the following implementations would satisfy this story" so downstream prompts treat it as a sketch, not a contract.
 
 Additional rules for bootstrap-generated stories:
 
@@ -235,6 +235,9 @@ Before showing the outline, review the stories you've generated against these cr
 
 - **Verifiable increment?** Could implement-story build this story and verify-story check it against principles? If a story's acceptance criteria are too vague to test, sharpen them.
 - **WHAT not HOW?** Stories describe what needs to exist, not implementation steps. If you wrote "create a file called X" instead of "the system can do Y", rewrite.
+- **Falsifiable acceptance criteria?** For each AC, can you mentally draft a Given [precondition] / When [action] / Then [measurable result]? If not, the AC is evocative prose — rewrite or cut. Refine-story will reject anything you cannot draft a Given/When/Then for.
+- **Vocabulary fence on Description and AC?** Scan both for transport / protocol / runtime / storage terminology — RPC, REST, endpoint, JWT, queue, retry, Redis, Postgres, table, schema, cache, specific library or framework names. If any appear, rewrite in domain vocabulary or move to Implementation Hints.
+- **Out of Scope populated with ≥2 concrete items?** If you cannot identify anything explicitly out of scope, the story's boundaries are unclear — return and tighten them. Vague items like "other use cases" do not count.
 - **Incremental sequence?** Within each epic, does each story build on the previous? Could the user ship story-01 alone and have something working?
 - **Deferred decisions placed correctly?** Each Bucket 2 decision lands in the first story that genuinely needs it — not earlier.
 - **Principles alignment?** If PRINCIPLES.md exists, do the stories respect the architectural patterns, quality requirements, and NFR targets defined there?
@@ -267,7 +270,7 @@ Wait for confirmation. The user may ask you to drop, add, rename, or reorder sto
 Once the outline is approved, write all the files at once:
 
 - One `_epic.md` per epic with the structure used by create-stories
-- One story file per story, following the create-stories template (Description → AC → Key Decisions → Related → Notes)
+- One story file per story, following the create-stories template (Description → Acceptance Criteria → Out of Scope → Key Decisions → Implementation Hints → Related → Notes). Out of Scope is mandatory with ≥2 items. Implementation Hints is optional and carries the non-binding preamble.
 - Update each `_epic.md`'s Stories table to list its stories in order
 
 Use sequential numbering: epics from 01 upward in the order proposed, stories within each epic from 01 upward in the incremental sequence determined in Step 4.
@@ -293,6 +296,7 @@ Give the user a summary:
 - **Calibrate questions to the project's scale and intent.** Ask high-level questions about goals, audience, longevity, expectations — not micro-technical questions about sync vs async or REST vs GraphQL. Adapt the questions to the project type: a personal hobby project gets different questions than a B2B SaaS.
 - **Use memory checkpoints aggressively.** Foundations after Step 2, then per epic in Step 4. Losing the foundational decisions or partial epic work to context compaction is the failure mode this prompt exists to prevent.
 - **Stories within an epic follow an incremental sequence**, not a flat list. Each story builds on the previous and delivers something validable.
+- **Generated stories must satisfy the create-stories contract on the first run of refine-story.** Description and Acceptance Criteria use domain vocabulary only (the vocabulary fence applies). Every AC is falsifiable. Out of Scope is populated with ≥2 concrete items. Implementation thoughts, if captured at all, live in Implementation Hints with the non-binding preamble — never in Description or AC.
 - **Vertical slices, not horizontal layers.** Each epic is a user-facing capability, not infrastructure-by-infrastructure.
 - **Do not implement stories. Do not define principles** — that's define-principles' job. Your scope is research analysis, decision locking, and backlog structuring.
 - **You are done when** all epics are structured with sequenced stories, foundational decisions are locked, deferrals are recorded with their target epics, and the user has a clear starting point.

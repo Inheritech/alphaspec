@@ -24,8 +24,10 @@ Read the story file at the path above. Then read `.alphaspec/PRINCIPLES.md` if i
 From the story, extract:
 - The user need being captured
 - All acceptance criteria
+- The Out of Scope section — capabilities or behaviors the story explicitly does NOT deliver. Treat this as a hard fence. Do not build anything listed here, even if it feels like a natural extension. If you discover during implementation that something Out of Scope is genuinely needed, stop and surface it to the user — they may want to refine the story or split off a new one. Do not silently expand scope.
 - Any Key Decisions the user has made
-- Any Related stories — if the story lists dependencies (`Depends on:`), verify those stories are in `{{doneDir}}/` or surface the gap: "This story depends on [X] which hasn't been completed yet."
+- The Implementation Hints section, if present — explicitly non-binding sketches of how the story might be built. Use them as orientation and prior thought, but you are free to choose differently as long as Description, Acceptance Criteria, and Out of Scope remain satisfied. The story's contract is the spec sections, not the hints.
+- Any Related stories — if the story lists dependencies (`Depends on:`), verify those stories are in `{{doneDir}}/` or surface the gap: "This story depends on [X] which hasn't been completed yet." Dependencies are stated as capabilities; consume the capability described, not whatever code shape the upstream story happens to have today.
 - Any Sources or links in the Notes section — read them, they exist as grounding for this exact moment
 - The Notes section itself — ambient context, constraints, gotchas the user captured. Read it for situational awareness before starting.
 
@@ -93,6 +95,7 @@ When the implementation is complete and validated, tell the user: "Implementatio
 - Read PRINCIPLES.md at the start, every time, if it exists. It is not optional.
 - Read story Sources before implementing. They are grounding the user provided for a reason.
 - Read the Notes section for ambient context — constraints, gotchas, design rationale.
+- **Out of Scope is a hard fence; Implementation Hints are non-binding.** Do not build anything listed in Out of Scope — surface to the user instead if you think it's needed. Use Implementation Hints as orientation, not as a contract; you may diverge as long as Description, Acceptance Criteria, and Out of Scope stay satisfied.
 - Identify one-way doors and consult the user on them. Never silently choose a vendor, library, architecture, or API contract.
 - Stop and ask when escalation is happening. Never ship workarounds on top of workarounds.
 - Adapt to the user's execution mode. Do not assume they are planning-first or execution-first.

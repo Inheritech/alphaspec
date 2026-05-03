@@ -77,6 +77,7 @@ Compare the story file to the implementation reality:
 - Does the Description still accurately describe what was built, or did the scope shift during implementation?
 - Are there acceptance criteria that no longer apply because the approach changed?
 - Were Key Decisions overridden without being updated in the story?
+- **Did the implementation include any capability listed in `Out of Scope`?** That section is a deliberate fence — building past it is intent-violating drift. Either the story should be refined to expand scope (and the Out of Scope item removed) or the implementation pulled back. Surface this explicitly; do not quietly accept it.
 - Are there things that were built that the story doesn't mention at all?
 
 If drift exists, surface it explicitly. Drift is not inherently bad — scope shifts during implementation are normal. But it must be surfaced so that complete-story can refine the story to match reality before archiving.
